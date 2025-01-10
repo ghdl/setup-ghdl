@@ -1,0 +1,27 @@
+name: Verification of setup-ghdl
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  Setup-GHDL-Nightly:
+    name: ${{ matrix.os.icon }} Setup GHDL on ${{ matrix.os.name }}
+    runs-on: ${{ matrix.os.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'backend': 'mcode'}
+          - {'icon': '🍏', 'name': 'macOS',   'image': 'macos-14',     'backend': 'mcode'}
+          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-2022', 'backend': 'mcode'}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Setup GHDL
+        uses: paebbels/setup-ghdl@dev
+        with:
+          version: nightly
+          backend: ${{ matrix.os.backend }}

@@ -1,0 +1,100 @@
+name: Setup GHDL
+branding:
+  icon: play
+  color: gray-dark
+description: Install and setup GHDL downloaded from GHDL's release pages at GitHub.
+author: Patrick Lehmann (@Paebbels)
+
+inputs:
+  version:
+    type: string
+    required: false
+    default: 'nightly'
+  backend:
+    type: string
+    required: false
+    default: 'mcode'
+  install-directory:
+    type: string
+    required: false
+    default: 'install'
+  investigate:
+    type: boolean
+    required: false
+    default: false
+
+runs:
+  using: composite
+  steps:
+    - name: Variables
+      id: variables
+      shell: bash
+      run: |
+        tee "${GITHUB_OUTPUT}" <<EOF
+        nightly-version=5.0.0-dev
+        EOF
+
+    - name: Debugging
+      id: debug
+      shell: bash
+      run: |
+        echo "runner.os:   ${{ runner.os }}"
+        echo "runner.arch: ${{ runner.arch }}"
+
+    - name: Download and install GHDL on Ubuntu 2024.04 (x86-64)
+      id: ubuntu
+      if: runner.os == 'Linux' && runner.arch == 'X64'
+      shell: bash
+      run: |
+        source /etc/lsb-release
+
+        if [[ "${DISTRIB_RELEASE}" != "24.04" ]]; then
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported Ubuntu version '${DISTRIB_RELEASE}'."
+          exit 1
+        else
+          printf "Runner:  %s\n" "Ubuntu ${DISTRIB_RELEASE} (x86-64)"
+        fi
+
+        if [[ "${{ inputs.version }}" == "nightly" ]]; then
+          VERSION_IN_URL="nightly"
+          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
+
+          printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
+        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
+          VERSION_IN_URL="${{ inputs.version }}"
+          VERSION_IN_FILE="${{ inputs.version }}"
+
+          printf "Version: %s\n" "${{ inputs.version }}"
+        else
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL version '${{ inputs.version }}'."
+          exit 1
+        fi
+
+        if [[ "${{ inputs.backend }}" != "mcode" ]]; then
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}'."
+          exit 1
+        else
+          printf "Backend: %s\n" "${{ inputs.backend }}"
+        fi
+
+        (
+          printf "Creating installation directory '${{ inputs.install-directory }}' ...\n"
+          mkdir -p "${{ inputs.install-directory }}"
+          cd "${{ inputs.install-directory }}"
+
+          printf "Downloading asset and extracting tar.gz file ...\n"
+          curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-ubuntu${DISTRIB_RELEASE}-x86_64.tar.gz" | tar -xz --strip-components 1
+          (
+            cd bin
+            pwd
+            ls -lAh .
+          )
+          # tree .
+          printf "Installing dependencies from './ubuntu.requirements' using 'apt-get' ...\n"
+          sudo xargs --no-run-if-empty -a ./ubuntu.requirements -- apt-get install -y --no-install-recommends
+        )
+
+        printf "Setting environment variable 'GHDL_PREFIX' ...\n"
+        tee "${$GITHUB_ENV}" <<EOF
+        GHDL_PREFIX=$(pwd)/${{ inputs.install-directory }}/lib/ghdl
+        EOF
