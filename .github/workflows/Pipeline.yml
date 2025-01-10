@@ -12,12 +12,16 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'backend': 'mcode'}
-          - {'icon': '🍏', 'name': 'macOS',   'image': 'macos-14',     'backend': 'mcode'}
-          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-2022', 'backend': 'mcode'}
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash', 'backend': 'mcode'}
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash', 'backend': 'llvm'}
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash', 'backend': 'llvm-jit'}
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash', 'backend': 'gcc'}
+          - {'icon': '🍎', 'name': 'macOS',   'image': 'macos-13',     'shell': 'bash', 'backend': 'mcode'}
+          - {'icon': '🍏', 'name': 'macOS',   'image': 'macos-14',     'shell': 'bash', 'backend': 'llvm'}
+          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-2022', 'shell': 'bash', 'backend': 'mcode'}
     defaults:
       run:
-        shell: bash
+        shell: ${{ matrix.os.shell }}
 
     steps:
       - name: Setup GHDL
@@ -25,3 +29,8 @@ jobs:
         with:
           version: nightly
           backend: ${{ matrix.os.backend }}
+          investigate: true
+
+      - name: Verify
+        run: |
+          ghdl --version
