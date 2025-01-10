@@ -1,0 +1,1 @@
+# `setup-ghdl` GitHub Action
