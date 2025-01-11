@@ -49,13 +49,6 @@ runs:
         nightly-version-msys2=5.0.0.dev-1
         EOF
 
-    - name: Debugging
-      id: debug
-      shell: bash
-      run: |
-        echo "runner.os:   ${{ runner.os }}"
-        echo "runner.arch: ${{ runner.arch }}"
-
     - name: Download and install GHDL on Ubuntu 2024.04 (x86-64)
       id: ubuntu
       if: runner.os == 'Linux' && runner.arch == 'X64'
@@ -212,8 +205,51 @@ runs:
       if: runner.os == 'Windows' && runner.arch == 'X64' && inputs.runtime == ''
       shell: powershell
       run: |
-        curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst" -o ghdl.pkg.tar.zst
+        # Download and install GHDL on Windows (native)
+        $BACKEND = "mcode"
+        $RUNTIME = "ucrt64"
 
+        if ( "${{ inputs.version }}" -eq "nightly" ) {
+          $VERSION_IN_URL =  "nightly"
+          $VERSION_IN_FILE = "${{ steps.variables.outputs.nightly-version }}"
+
+          echo "Version: nightly (${VERSION_IN_FILE})"
+        } elseif ( "${{ inputs.version }}" -match '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$' ) {
+          $VERSION_IN_URL =  "${{ inputs.version }}"
+          $VERSION_IN_FILE = "${{ inputs.version }}"
+
+          echo "Version: ${{ inputs.version }}"
+        } else {
+          echo "::error title=setup-ghdl::Unsupported GHDL version '${{ inputs.version }}'."
+          exit 1
+        }
+
+        if ( "${{ inputs.backend }}" -eq "mcode" ) {
+          echo "Backend: ${{ inputs.backend }}"
+        } else {
+          echo "::error title=setup-ghdl::Unsupported GHDL backend '${{ inputs.backend }}'."
+          exit 1
+        }
+
+        echo "Creating installation directory '${{ inputs.install-directory }}' ..."
+        mkdir "${{ inputs.install-directory }}" | Out-Null
+        cd "${{ inputs.install-directory }}"
+
+        $DOWNLOAD_URL = "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${BACKEND}-${VERSION_IN_FILE}-${RUNTIME}.zip"
+        echo "Downloading asset from '${DOWNLOAD_URL}' ..."
+        curl "${DOWNLOAD_URL}" -o ghdl.zip
+
+        echo "Extracting zip file 'ghdl.zip' ..."
+        Expand-Archive "ghdl.zip"
+
+        echo "Removing zip file 'ghdl.zip' ..."
+        rm "ghdl.zip"
+
+        echo "Setting environment variable 'GHDL_PREFIX' ..."
+        echo "GHDL_PREFIX=$($(pwd).Path)\${{ inputs.install-directory }}\lib\ghdl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+        echo "Adding GHDL to '$PATH' ..."
+        echo "$($(pwd).Path)\${{ inputs.install-directory }}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Download and install GHDL on Windows + MSYS2 (x86-64)
       id: MSYS2
