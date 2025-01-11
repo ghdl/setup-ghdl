@@ -26,6 +26,9 @@ jobs:
           - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'mcode'}
           - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm'}
           - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm-jit'}
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: 🟦 Setup MSYS2 for ${{ matrix.os.runtime }}
@@ -43,6 +46,13 @@ jobs:
           runtime: ${{ matrix.os.runtime }}
           investigate: true
 
-      - name: Verify
+      - name: Verify on Linux and macOS
+        if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS'
+        run: |
+          ghdl --version
+
+      - name: Verify on Windows + MSYS2
+        if: matrix.os.name == 'Windows' && matrix.os.runtime != ''
+        shell: 'msys2 {0}'
         run: |
           ghdl --version

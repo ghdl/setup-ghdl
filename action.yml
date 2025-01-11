@@ -264,7 +264,5 @@ runs:
           printf "::warning title=%s::%s\n" "setup-ghdl" "Failed to remove 'ghdl.pkg.tar.zst'."
         fi
 
-        which ghdl
-        ghdl version
         echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl) >> $GITHUB_ENV"
         echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> $GITHUB_ENV
