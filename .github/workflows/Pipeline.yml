@@ -1,0 +1,46 @@
+name: Verification of setup-ghdl
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  Setup-GHDL-Nightly:
+    name: ${{ matrix.os.icon }} Setup GHDL ${{ matrix.os.backend }} on ${{ matrix.os.name }}
+    runs-on: ${{ matrix.os.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash',      'runtime': '',       'backend': 'mcode'}
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash',      'runtime': '',       'backend': 'llvm'}
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash',      'runtime': '',       'backend': 'llvm-jit'}
+          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'shell': 'bash',      'runtime': '',       'backend': 'gcc'}
+          - {'icon': '🍎', 'name': 'macOS',   'image': 'macos-13',     'shell': 'bash',      'runtime': '',       'backend': 'mcode'}
+          - {'icon': '🍎', 'name': 'macOS',   'image': 'macos-13',     'shell': 'bash',      'runtime': '',       'backend': 'llvm'}
+          - {'icon': '🍏', 'name': 'macOS',   'image': 'macos-14',     'shell': 'bash',      'runtime': '',       'backend': 'llvm'}
+          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-2022', 'shell': 'powershell','runtime': '',       'backend': 'mcode'}
+          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-2022', 'shell': 'msys2 {0}', 'runtime': 'ucrt64', 'backend': 'mcode'}
+    defaults:
+      run:
+        shell: ${{ matrix.os.shell }}
+
+    steps:
+      - name: 🟦 Setup MSYS2 for ${{ matrix.os.runtime }}
+        uses: msys2/setup-msys2@v2
+        if: startsWith(matrix.os.shell, 'msys2')
+        with:
+          msystem: ${{ matrix.os.runtime }}
+          update: true
+
+      - name: Setup GHDL ${{ matrix.os.backend }}
+        uses: paebbels/setup-ghdl@main
+        with:
+          version: nightly
+          backend: ${{ matrix.os.backend }}
+          runtime: ${{ matrix.os.runtime }}
+          investigate: true
+
+      - name: Verify
+        run: |
+          ghdl --version
