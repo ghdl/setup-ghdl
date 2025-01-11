@@ -29,19 +29,19 @@ jobs:
       matrix:
         os:
           - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'mcode'}
-#          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm'}
-#          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm-jit'}
-#          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'gcc'}
-#          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'backend': 'mcode'}
-#          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'backend': 'llvm'}
-#          - {'icon': '🍏',   'name': 'macOS',   'image': 'macos-14',     'runtime': '',        'backend': 'llvm'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm-jit'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'gcc'}
+          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'backend': 'mcode'}
+          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'backend': 'llvm'}
+          - {'icon': '🍏',   'name': 'macOS',   'image': 'macos-14',     'runtime': '',        'backend': 'llvm'}
           - {'icon': '🪟',   'name': 'Windows', 'image': 'windows-2022', 'runtime': '',        'backend': 'mcode'}
-#          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'mcode'}
-#          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'llvm'}
-#          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'llvm-jit'}
-#          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'mcode'}
-#          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm'}
-#          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm-jit'}
+          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'mcode'}
+          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'llvm'}
+          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'llvm-jit'}
+          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'mcode'}
+          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm'}
+          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm-jit'}
     defaults:
       run:
         shell: bash
