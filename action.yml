@@ -61,6 +61,8 @@ runs:
       shell: bash
       run: |
         tee "${GITHUB_OUTPUT}" <<EOF
+        latest-version=5.0.0
+        latest-version-msys2=5.0.0-1
         nightly-version=5.0.0-dev
         nightly-version-msys2=5.0.0.dev-1
         EOF
@@ -88,6 +90,11 @@ runs:
           VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
 
           printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
+        elif [[ "${{ inputs.version }}" == "latest" ]]; then
+          VERSION_IN_URL="${{ steps.variables.outputs.nightly-version }}"
+          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
+
+          printf "Version: %s\n" "latest (${VERSION_IN_FILE})"
         elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
           VERSION_IN_FILE="${{ inputs.version }}"
@@ -166,6 +173,11 @@ runs:
           VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
 
           printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
+        elif [[ "${{ inputs.version }}" == "latest" ]]; then
+          VERSION_IN_URL="${{ steps.variables.outputs.nightly-version }}"
+          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
+
+          printf "Version: %s\n" "latest (${VERSION_IN_FILE})"
         elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
           VERSION_IN_FILE="${{ inputs.version }}"
@@ -230,6 +242,11 @@ runs:
           $VERSION_IN_FILE = "${{ steps.variables.outputs.nightly-version }}"
 
           echo "Version: nightly (${VERSION_IN_FILE})"
+        } elseif ( "${{ inputs.version }}" -eq "latest" ) {
+          $VERSION_IN_URL =  "${{ steps.variables.outputs.nightly-version }}"
+          $VERSION_IN_FILE = "${{ steps.variables.outputs.nightly-version }}"
+
+          echo "Version: nightly (${VERSION_IN_FILE})"
         } elseif ( "${{ inputs.version }}" -match '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$' ) {
           $VERSION_IN_URL =  "${{ inputs.version }}"
           $VERSION_IN_FILE = "${{ inputs.version }}"
@@ -290,6 +307,11 @@ runs:
 
         if [[ "${{ inputs.version }}" == "nightly" ]]; then
           VERSION_IN_URL="nightly"
+          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version-msys2 }}"
+
+          printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
+        elif [[ "${{ inputs.version }}" == "latest" ]]; then
+          VERSION_IN_URL="${{ steps.variables.outputs.nightly-version }}"
           VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version-msys2 }}"
 
           printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"

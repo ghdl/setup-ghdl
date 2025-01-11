@@ -5,10 +5,10 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
 
 ## Features
 
-* Select GHDL version (tagged release or nightly build).
-* Select GHDL backend (LLVM, LLVM-JIT, mcode, GCC)
-* Activate an investigation mode (check and show GHDL installation, ...)
-* Supported runner OS' (automatically detected): Ubuntu 2024.04, macOS (x86-64), macOS (aarch64), Windows
+* Select GHDL version (tagged release like `5.0.0`, `latest` (stable) release or `nightly` release (rolling release)).
+* Select GHDL backend (LLVM, LLVM-JIT, mcode, GCC).
+* Activate an investigation mode (check and show GHDL installation, ...).
+* Supported runner OS' (automatically detected): Ubuntu 2024.04, macOS (x86-64), macOS (aarch64), Windows.
 
 ## Usage
 
@@ -64,7 +64,7 @@ jobs:
 
 | Parameter           | Required | Default     | Description                                                                                                                                 |
 |---------------------|:--------:|-------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.0.0` or `nightly`.                                                                                    |
+| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.0.0`, `latest` or `nightly`.                                                                          |
 | `backend`           |    no    | `'mcode'`   | GHDL backend: `llvm`, `llvm-jit`, `mcode`, `gcc`.                                                                                           |
 | `runtime`           |    no    | `''`        | If runner OS is Windows, a MSYS2 runtime can be selected (`mingw64`, `ucrt64`). If not set, Windows native is used (not MSYS2 environment). |
 | `install-directory` |    no    | `'install'` | Local installation directory, in case an archive asset is downloaded and extracted.                                                         |
