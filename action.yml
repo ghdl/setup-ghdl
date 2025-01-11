@@ -265,7 +265,7 @@ runs:
         echo "GHDL_PREFIX=$($(pwd).Path)\${{ inputs.install-directory }}\lib\ghdl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
         echo "Adding GHDL to 'PATH' ..."
-        echo "$($(pwd).Path)\${{ inputs.install-directory }}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "$($(pwd).Path)\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Download and install GHDL on Windows + MSYS2 (x86-64)
       id: MSYS2
@@ -273,6 +273,8 @@ runs:
       shell: 'msys2 {0}'
       run: |
         # Download and install GHDL on Windows + MSYS2 (x86-64)
+        ANSI_LIGHT_RED=$'\x1b[91m'
+        ANSI_LIGHT_GREEN=$'\x1b[92m'
         ANSI_LIGHT_BLUE="\e[94m"
         ANSI_NOCOLOR=$'\x1b[0m'
 
@@ -326,5 +328,7 @@ runs:
           printf "::warning title=%s::%s\n" "setup-ghdl" "Failed to remove 'ghdl.pkg.tar.zst'."
         fi
 
-        echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl) >> $GITHUB_ENV"
-        echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> $GITHUB_ENV
+        printf "Setting environment variable 'GHDL_PREFIX' ...\n"
+        tee "${GITHUB_ENV}" <<EOF
+        GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl)
+        EOF
