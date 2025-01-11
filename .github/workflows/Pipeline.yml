@@ -22,12 +22,12 @@ on:
 
 jobs:
   Setup-GHDL-Nightly:
-    name: ${{ matrix.os.icon }} Setup GHDL ${{ matrix.os.backend }} on ${{ matrix.os.name }}
-    runs-on: ${{ matrix.os.image }}
+    name: ${{ matrix.icon }} Setup GHDL ${{ matrix.backend }} on ${{ matrix.name }}
+    runs-on: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
-        os:
+        include:
           - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'mcode'}
           - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm'}
           - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm-jit'}
@@ -47,36 +47,36 @@ jobs:
         shell: bash
 
     steps:
-      - name: 🟦 Setup MSYS2 for ${{ matrix.os.runtime }}
+      - name: 🟦 Setup MSYS2 for ${{ matrix.runtime }}
         uses: msys2/setup-msys2@v2
-        if: matrix.os.runtime != ''
+        if: matrix.runtime != ''
         with:
-          msystem: ${{ matrix.os.runtime }}
+          msystem: ${{ matrix.runtime }}
           update: true
 
-      - name: Setup GHDL ${{ matrix.os.backend }}
+      - name: Setup GHDL ${{ matrix.backend }}
         uses: paebbels/setup-ghdl@dev
         with:
           version: nightly
-          backend: ${{ matrix.os.backend }}
-          runtime: ${{ matrix.os.runtime }}
+          backend: ${{ matrix.backend }}
+          runtime: ${{ matrix.runtime }}
           investigate: true
 
       - name: Verify on Linux or macOS
-        if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS'
+        if: matrix.name == 'Ubuntu' || matrix.name == 'macOS'
         run: |
           which ghdl
           ghdl --version
 
       - name: Verify on Windows (native)
-        if: matrix.os.name == 'Windows' && matrix.os.runtime == ''
+        if: matrix.name == 'Windows' && matrix.runtime == ''
         shell: powershell
         run: |
           echo $(Get-Command ghdl).Source
           ghdl --version
 
       - name: Verify on Windows + MSYS2
-        if: matrix.os.name == 'Windows' && matrix.os.runtime != ''
+        if: matrix.name == 'Windows' && matrix.runtime != ''
         shell: 'msys2 {0}'
         run: |
           which ghdl
