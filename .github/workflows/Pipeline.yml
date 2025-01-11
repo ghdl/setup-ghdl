@@ -46,8 +46,14 @@ jobs:
           runtime: ${{ matrix.os.runtime }}
           investigate: true
 
-      - name: Verify on Linux and macOS
+      - name: Verify on Linux, macOS or Windows (native)
         if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS'
+        run: |
+          ghdl --version
+
+      - name: Verify on Linux, macOS or Windows (native)
+        if: matrix.os.name == 'Windows' && matrix.os.runtime == ''
+        shell: powershell
         run: |
           ghdl --version
 
