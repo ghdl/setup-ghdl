@@ -7,22 +7,32 @@ author: Patrick Lehmann (@Paebbels)
 
 inputs:
   version:
+    description: |
+      A tagged GHDL version starting at `v5.0.0` or `nightly`.
     type: string
     required: false
     default: 'nightly'
   backend:
+    description: |
+      GHDL backend: `llvm`, `llvm-jit`, `mcode`, `gcc`.
     type: string
     required: false
     default: 'mcode'
   runtime:
+    description: |
+      If runner OS is Windows, a MSYS2 runtime can be selected (`mingw64`, `ucrt64`). If not set, Windows native is used (not MSYS2 environment).
     type: string
     required: false
     default: ''
   install-directory:
+    description: |
+      Local installation directory, in case an archive asset is downloaded and extracted.
     type: string
     required: false
     default: 'install'
   investigate:
+    description: |
+      If enabled, more details are printed and check the GHDL installation is checked.
     type: boolean
     required: false
     default: false
@@ -36,6 +46,7 @@ runs:
       run: |
         tee "${GITHUB_OUTPUT}" <<EOF
         nightly-version=5.0.0-dev
+        nightly-version-msys2=5.0.0.dev-1
         EOF
 
     - name: Debugging
@@ -50,6 +61,7 @@ runs:
       if: runner.os == 'Linux' && runner.arch == 'X64'
       shell: bash
       run: |
+        # Download and install GHDL on Ubuntu 2024.04 (x86-64)
         ANSI_LIGHT_BLUE="\e[94m"
         ANSI_NOCOLOR=$'\x1b[0m'
 
@@ -122,8 +134,12 @@ runs:
       if: runner.os == 'macOS'  && ( runner.arch == 'X64' || runner.arch == 'ARM64' )
       shell: bash
       run: |
+        # Download and install GHDL on macOS (${{ runner.arch }})
+        ANSI_LIGHT_BLUE="\e[94m"
+        ANSI_NOCOLOR=$'\x1b[0m'
 
         # TODO: check macOS version
+
         if [[ "${{ runner.arch }}" == "X64" ]]; then
           OS_RELEASE=13
           OS_ARCH=x86_64
@@ -163,13 +179,20 @@ runs:
           mkdir -p "${{ inputs.install-directory }}"
           cd "${{ inputs.install-directory }}"
 
-          printf "Downloading asset and extracting tar.gz file ...\n"
-          curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-macos${OS_RELEASE}-${OS_ARCH}.tar.gz" | tar -xz --strip-components 1
-          (
+          DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-macos${OS_RELEASE}-${OS_ARCH}.tar.gz"
+          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset and extracting '${DOWNLOAD_URL}' file ..."
+          curl -L "${DOWNLOAD_URL}" | tar -xz --strip-components 1
+          printf "::endgroup::\n"
+
+          if [[ "${{ inputs.investigate }}" == "true" ]]; then
             cd bin
-            pwd
+            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
+
+            # tree is not supported on macOS
+            # tree -pash .
             ls -lAh .
-          )
+            printf "::endgroup::\n"
+          fi
         )
 
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
@@ -192,14 +215,28 @@ runs:
         curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst" -o ghdl.pkg.tar.zst
 
 
-    - name: Download and install GHDL on Windows + UCRT64 (x86-64)
-      id: UCRT64
+    - name: Download and install GHDL on Windows + MSYS2 (x86-64)
+      id: MSYS2
       if: runner.os == 'Windows' && runner.arch == 'X64' && ( inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64' )
-      shell: ${{ inputs.shell }}
+      shell: 'msys2 {0}'
       run: |
+        # Download and install GHDL on Windows + MSYS2 (x86-64)
+        ANSI_LIGHT_BLUE="\e[94m"
+        ANSI_NOCOLOR=$'\x1b[0m'
+
+        if [[ ${{ inputs.runtime }} == "mingw64" ]]; then
+          RUNTIME=""
+        elif [[ ${{ inputs.runtime }} == "ucrt64" ]]; then
+          RUNTIME="ucrt-"
+        else
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported MSYS 2 runtime '${{ inputs.runtime }}'."
+          exit 1
+        fi
+        printf "MSYS2:   %s\n" "${{ inputs.runtime }}"
+
         if [[ "${{ inputs.version }}" == "nightly" ]]; then
           VERSION_IN_URL="nightly"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
+          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version-msys2 }}"
 
           printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
         elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
@@ -219,10 +256,23 @@ runs:
           exit 1
         fi
 
-        curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst" -o ghdl.pkg.tar.zst
-        pacman -U --noconfirm ghdl.pkg.tar.zst
+        DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/mingw-w64-${RUNTIME}x86_64-ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-any.pkg.tar.zst"
+        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${DOWNLOAD_URL}' ..."
+        curl -L "${DOWNLOAD_URL}" -o ghdl.pkg.tar.zst
+        printf "::endgroup::\n"
 
-        which ghdl
-        ghdl version
+        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing 'ghdl.pkg.tar.zst' file ..."
+        pacman -U --noconfirm ghdl.pkg.tar.zst
+        printf "::endgroup::\n"
+
+        printf "Deleting '%s' ... " "ghdl.pkg.tar.zst"
+        rm "ghdl.pkg.tar.zst"
+        if [[ $? -eq 0 ]]; then
+          printf "%s\n" "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}"
+        else
+          printf "%s\n" "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}"
+          printf "::warning title=%s::%s\n" "setup-ghdl" "Failed to remove 'ghdl.pkg.tar.zst'."
+        fi
+
         echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl) >> $GITHUB_ENV"
         echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> $GITHUB_ENV
