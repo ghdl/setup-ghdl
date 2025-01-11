@@ -2,6 +2,8 @@
 
 This composite action, installs GHDL in a GitHub Action's workflow job.
 
+> [!NOTE]  
+> This GitHub Action replaces [`setup-ghdl-ci`](https://github.com/ghdl/setup-ghdl-ci).
 
 ## Features
 
