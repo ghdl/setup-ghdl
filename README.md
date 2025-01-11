@@ -2,7 +2,7 @@
 
 This composite action, installs GHDL in a GitHub Action's workflow job.
 
-> [!NOTE]  
+> [!IMPORTANT]  
 > This GitHub Action replaces [`setup-ghdl-ci`](https://github.com/ghdl/setup-ghdl-ci).
 
 ## Features
@@ -81,28 +81,36 @@ jobs:
 | `ghdl-lib-directory` | tbd         |
 
 
-## Dependencies
+## Behavior and Dependencies
 
 ### On Linux (Ubuntu)
 
-* Download GHDL asset as `*.tar.gz` and extract files to `install-directory`.
-* Further dependencies will be installed using `apt-get`.
-* GHDL will be added to `PATH`.
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.tar.gz` and extract files into
+  `install-directory`.
+* Further dependencies will be installed using `apt-get` and reading the embedded `ubuntu.requirements`
+  file.
+* GHDL's `bin` directory will be added to `PATH`.
 
 ### On macOS
 
-* Download GHDL asset as `*.tar.gz` and extract files to `install-directory`.
-* GHDL will be added to `PATH`.
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.tar.gz` and extract files into
+  `install-directory`.
+* All dependencies are contained within the archive, thus no further dependencies need to be installed.
+* GHDL's `bin` directory will be added to `PATH`.
 
 ### On Windows (native)
 
-*tbd*
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.zip` into `install-directory`.
+* The archive is extracted into the same directory.
+* All dependencies are contained within the archive, thus no further dependencies need to be installed.
+* GHDL's `bin` directory will be added to `PATH`.
 
 ### On Windows + MSYS2
 
-* Download GHDL asset as `*.pkg.tar.zst` installation package for pacman.
-* Install package and further dependencies (listed in the package) via pacman.
-
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.pkg.tar.zst` installation package for pacman.
+* Install this package.
+* Further dependencies get automatically installed by pacman, as listed as dependencies in the package.
+* No need to modify `PATH`, because GHDL got installed into the MSYS2 system.
 
 ## Contributors
 
@@ -111,8 +119,9 @@ jobs:
 
 ### Credits
 
-This GitHub Action replaces `setup-ghdl-ci`, a Javascript Action developed by Umarcor, with a composite action using
-simples instructions (`curl`, `tar`, `apt-get`) written in Bash.
+This GitHub Action replaces `setup-ghdl-ci`, a Javascript Action developed by
+[Unai Martinez-Corral](https://GitHub.com/umarcor), with a composite action using simples instructions (`curl`, `tar`,
+`apt-get`) written in Bash or Powershell.
 
 
 ## License
