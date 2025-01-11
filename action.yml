@@ -195,7 +195,7 @@ runs:
     - name: Download and install GHDL on Windows + UCRT64 (x86-64)
       id: UCRT64
       if: runner.os == 'Windows' && runner.arch == 'X64' && ( inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64' )
-      shell: ${{ inputs.shell }}
+      shell: 'msys2 {0}'
       run: |
         if [[ "${{ inputs.version }}" == "nightly" ]]; then
           VERSION_IN_URL="nightly"
