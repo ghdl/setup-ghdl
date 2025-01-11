@@ -256,13 +256,13 @@ runs:
         curl "${DOWNLOAD_URL}" -o ghdl.zip
 
         echo "Extracting zip file 'ghdl.zip' ..."
-        Expand-Archive "ghdl.zip"
+        Expand-Archive -Path "ghdl.zip" -DestinationPath "."
 
         echo "Removing zip file 'ghdl.zip' ..."
         rm "ghdl.zip"
 
         echo "Setting environment variable 'GHDL_PREFIX' ..."
-        echo "GHDL_PREFIX=$($(pwd).Path)\${{ inputs.install-directory }}\lib\ghdl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "GHDL_PREFIX=$($(pwd).Path)\lib\ghdl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
         echo "Adding GHDL to 'PATH' ..."
         echo "$($(pwd).Path)\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
