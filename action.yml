@@ -14,6 +14,10 @@ inputs:
     type: string
     required: false
     default: 'mcode'
+  runtime:
+    type: string
+    required: false
+    default: ''
   install-directory:
     type: string
     required: false
@@ -113,14 +117,24 @@ runs:
 
         printf "Writing step outputs 'xxx' ...\n"
 
-    - name: Download and install GHDL on macOS x86-64
+    - name: Download and install GHDL on macOS (${{ runner.arch }})
       id: macOSIntel
-      if: runner.os == 'macOS' && runner.arch == 'X64'
+      if: runner.os == 'macOS'  && ( runner.arch == 'X64' || runner.arch == 'ARM64' )
       shell: bash
       run: |
-        # TODO: check macOS version
 
-        OS_RELEASE=13
+        # TODO: check macOS version
+        if [[ "${{ runner.arch }}" == "X64" ]]; then
+          OS_RELEASE=13
+          OS_ARCH=x86_64
+        elif [[ "${{ runner.arch }}" == "ARM64" ]]; then
+          OS_RELEASE=14
+          OS_ARCH=aarch64
+        else
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported macOS architecture '${{ runner.arch }}'."
+          exit 1
+        fi
+        printf "macOS:   macOS %s - %s\n" "${OS_RELEASE}" "${OS_ARCH//_/-}"
 
         if [[ "${{ inputs.version }}" == "nightly" ]]; then
           VERSION_IN_URL="nightly"
@@ -137,11 +151,11 @@ runs:
           exit 1
         fi
 
-        if [[ "${{ inputs.backend }}" != "mcode" ]]; then
+        if [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?$ ]]; then
+          printf "Backend: %s\n" "${{ inputs.backend }}"
+        else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}'."
           exit 1
-        else
-          printf "Backend: %s\n" "${{ inputs.backend }}"
         fi
 
         (
@@ -150,7 +164,7 @@ runs:
           cd "${{ inputs.install-directory }}"
 
           printf "Downloading asset and extracting tar.gz file ...\n"
-          curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-macos${OS_RELEASE}-x86_64.tar.gz" | tar -xz --strip-components 1
+          curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-macos${OS_RELEASE}-${OS_ARCH}.tar.gz" | tar -xz --strip-components 1
           (
             cd bin
             pwd
@@ -170,15 +184,19 @@ runs:
 
         printf "Writing step outputs 'xxx' ...\n"
 
-    - name: Download and install GHDL on macOS aarch64
-      id: macOSArm
-      if: runner.os == 'macOS' && runner.arch == 'ARM64'
-      shell: bash
+    - name: Download and install GHDL on Windows (native)
+      id: Windows
+      if: runner.os == 'Windows' && runner.arch == 'X64' && inputs.runtime == ''
+      shell: powershell
       run: |
-        # TODO: check macOS version
+        curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst" -o ghdl.pkg.tar.zst
 
-        OS_RELEASE=14
 
+    - name: Download and install GHDL on Windows + UCRT64 (x86-64)
+      id: UCRT64
+      if: runner.os == 'Windows' && runner.arch == 'X64' && ( inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64' )
+      shell: ${{ inputs.shell }}
+      run: |
         if [[ "${{ inputs.version }}" == "nightly" ]]; then
           VERSION_IN_URL="nightly"
           VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
@@ -194,35 +212,17 @@ runs:
           exit 1
         fi
 
-        if [[ "${{ inputs.backend }}" != "llvm" ]]; then
+        if [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?$ ]]; then
+          printf "Backend: %s\n" "${{ inputs.backend }}"
+        else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}'."
           exit 1
-        else
-          printf "Backend: %s\n" "${{ inputs.backend }}"
         fi
 
-        (
-          printf "Creating installation directory '${{ inputs.install-directory }}' ...\n"
-          mkdir -p "${{ inputs.install-directory }}"
-          cd "${{ inputs.install-directory }}"
+        curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst" -o ghdl.pkg.tar.zst
+        pacman -U --noconfirm ghdl.pkg.tar.zst
 
-          printf "Downloading asset and extracting tar.gz file ...\n"
-          curl -L "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-macos${OS_RELEASE}-aarch64.tar.gz" | tar -xz --strip-components 1
-          (
-            cd bin
-            pwd
-            ls -lAh .
-          )
-        )
-
-        printf "Setting environment variable 'GHDL_PREFIX' ...\n"
-        tee "${GITHUB_ENV}" <<EOF
-        GHDL_PREFIX=$(pwd)/${{ inputs.install-directory }}/lib/ghdl
-        EOF
-
-        printf "Adding GHDL to 'PATH' ...\n"
-        tee "${GITHUB_PATH}" <<EOF
-        $(pwd)/${{ inputs.install-directory }}/bin
-        EOF
-
-        printf "Writing step outputs 'xxx' ...\n"
+        which ghdl
+        ghdl version
+        echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl) >> $GITHUB_ENV"
+        echo "GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> $GITHUB_ENV
