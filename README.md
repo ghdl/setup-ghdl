@@ -111,3 +111,12 @@ jobs:
 
 This GitHub Action replaces `setup-ghdl-ci`, a Javascript Action developed by Umarcor, with a composite action using
 simples instructions (`curl`, `tar`, `apt-get`) written in Bash.
+
+
+## License
+
+This GitHub Composite Action (source code) licensed under [The MIT License](LICENSE.md).
+
+---
+
+SPDX-License-Identifier: MIT
