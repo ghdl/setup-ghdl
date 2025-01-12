@@ -2,13 +2,15 @@
 
 This composite action, installs GHDL in a GitHub Action's workflow job.
 
+> [!IMPORTANT]  
+> This GitHub Action replaces [`setup-ghdl-ci`](https://github.com/ghdl/setup-ghdl-ci).
 
 ## Features
 
-* Select GHDL version (tagged release or nightly build).
-* Select GHDL backend (LLVM, LLVM-JIT, mcode, GCC)
-* Activate an investigation mode (check and show GHDL installation, ...)
-* Supported runner OS' (automatically detected): Ubuntu 2024.04, macOS (x86-64), macOS (aarch64), Windows
+* Select GHDL version (tagged release like `5.0.0`, `latest` (stable) release or `nightly` release (rolling release)).
+* Select GHDL backend (LLVM, LLVM-JIT, mcode, GCC).
+* Activate an investigation mode (check and show GHDL installation, ...).
+* Supported runner OS' (automatically detected): Ubuntu 2024.04, macOS (x86-64), macOS (aarch64), Windows.
 
 ## Usage
 
@@ -18,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Run VHDL Simulation
-        uses: ghdl/setup-ghdl@v0
+        uses: ghdl/setup-ghdl@v1
         with:
           version: nightly
           backend: mcode
@@ -28,7 +30,7 @@ jobs:
     runs-on: macOS-14
     steps:
       - name: Run VHDL Simulation
-        uses: ghdl/setup-ghdl@v0
+        uses: ghdl/setup-ghdl@v1
         with:
           version: nightly
           backend: llvm
@@ -37,7 +39,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Run VHDL Simulation
-        uses: ghdl/setup-ghdl@v0
+        uses: ghdl/setup-ghdl@v1
         with:
           version: nightly
           backend: mcode
@@ -52,7 +54,7 @@ jobs:
           update: true
 
       - name: Run VHDL Simulation
-        uses: ghdl/setup-ghdl@v0
+        uses: ghdl/setup-ghdl@v1
         with:
           version: nightly
           backend: mcode
@@ -64,7 +66,7 @@ jobs:
 
 | Parameter           | Required | Default     | Description                                                                                                                                 |
 |---------------------|:--------:|-------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.0.0` or `nightly`.                                                                                    |
+| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.0.0`, `latest` or `nightly`.                                                                          |
 | `backend`           |    no    | `'mcode'`   | GHDL backend: `llvm`, `llvm-jit`, `mcode`, `gcc`.                                                                                           |
 | `runtime`           |    no    | `''`        | If runner OS is Windows, a MSYS2 runtime can be selected (`mingw64`, `ucrt64`). If not set, Windows native is used (not MSYS2 environment). |
 | `install-directory` |    no    | `'install'` | Local installation directory, in case an archive asset is downloaded and extracted.                                                         |
@@ -79,28 +81,36 @@ jobs:
 | `ghdl-lib-directory` | tbd         |
 
 
-## Dependencies
+## Behavior and Dependencies
 
 ### On Linux (Ubuntu)
 
-* Download GHDL asset as `*.tar.gz` and extract files to `install-directory`.
-* Further dependencies will be installed using `apt-get`.
-* GHDL will be added to `PATH`.
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.tar.gz` and extract files into
+  `install-directory`.
+* Further dependencies will be installed using `apt-get` and reading the embedded `ubuntu.requirements`
+  file.
+* GHDL's `bin` directory will be added to `PATH`.
 
 ### On macOS
 
-* Download GHDL asset as `*.tar.gz` and extract files to `install-directory`.
-* GHDL will be added to `PATH`.
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.tar.gz` and extract files into
+  `install-directory`.
+* All dependencies are contained within the archive, thus no further dependencies need to be installed.
+* GHDL's `bin` directory will be added to `PATH`.
 
 ### On Windows (native)
 
-*tbd*
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.zip` into `install-directory`.
+* The archive is extracted into the same directory.
+* All dependencies are contained within the archive, thus no further dependencies need to be installed.
+* GHDL's `bin` directory will be added to `PATH`.
 
 ### On Windows + MSYS2
 
-* Download GHDL asset as `*.pkg.tar.zst` installation package for pacman.
-* Install package and further dependencies (listed in the package) via pacman.
-
+* Download GHDL asset from https://github.com/ghdl/ghdl/releases as `*.pkg.tar.zst` installation package for pacman.
+* Install this package.
+* Further dependencies get automatically installed by pacman, as listed as dependencies in the package.
+* No need to modify `PATH`, because GHDL got installed into the MSYS2 system.
 
 ## Contributors
 
@@ -109,5 +119,15 @@ jobs:
 
 ### Credits
 
-This GitHub Action replaces `setup-ghdl-ci`, a Javascript Action developed by Umarcor, with a composite action using
-simples instructions (`curl`, `tar`, `apt-get`) written in Bash.
+This GitHub Action replaces `setup-ghdl-ci`, a Javascript Action developed by
+[Unai Martinez-Corral](https://GitHub.com/umarcor), with a composite action using simples instructions (`curl`, `tar`,
+`apt-get`) written in Bash or Powershell.
+
+
+## License
+
+This GitHub Composite Action (source code) licensed under [The MIT License](LICENSE.md).
+
+---
+
+SPDX-License-Identifier: MIT
