@@ -56,16 +56,28 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Detect correct shell
+      id: shell
+      shell: bash
+      run: |
+        # Detect correct shell
+        if [[ "${{ runner.os }}" == "Windows" && "${{ inputs.runtime }}" != "" ]]; then
+          printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
+        else
+          printf "shell=bash" >> $GITHUB_OUTPUT
+        fi
+
     - name: Update Bash on macOS
       if: runner.os == 'macOS'
       shell: bash
       run: |
+        # Update Bash on macOS
         brew install bash
 
     - name: Download and install GHDL
       id: generic
       if: runner.os == 'Linux' || runner.os == 'macOS' || ( runner.os == 'Windows' && inputs.runtime != '' )
-      shell: bash
+      shell: ${{ steps.shell.outputs.shell }}
       run: |
         # Download and install GHDL
         ANSI_LIGHT_RED=$'\x1b[91m'
@@ -105,14 +117,20 @@ runs:
           fi
           if [[ "${{ inputs.runtime }}" == "mingw64" ]]; then
             osRuntime="mingw64"
+
+            printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing 'jq' file ..."
+            pacman -S --noconfirm mingw64/mingw-w64-x86_64-jq
+            printf "::endgroup::\n"
           elif [[ "${{ inputs.runtime }}" == "ucrt64" ]]; then
-            osRuntime="ucrt4"
+            osRuntime="ucrt64"
+
+            printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing 'jq' file ..."
+            pacman -S --noconfirm ucrt64/mingw-w64-ucrt-x86_64-jq
+            printf "::endgroup::\n"
           else
             printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported MSYS 2 runtime '${{ inputs.runtime }}'."
             exit 1
           fi
-
-          cmd /c ver
 
           osName="Windows"
           osMajorVersion="2022"
@@ -279,20 +297,22 @@ runs:
             printf "::endgroup::\n"
           fi
 
-          printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
-          tree -pash .
-          printf "::endgroup::\n"
+          if ! [[ "${osName}" == "Windows" && "${osRuntime}" != "" ]]; then
+            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
+            tree -pash .
+            printf "::endgroup::\n"
+          fi
         fi
 
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
         if [[ "${osRuntime}" == "native" ]]; then
-          printf "GHDL_PREFIX=%s\n" "$(pwd)/${{ inputs.install-directory }}/lib/ghdl" >> ${GITHUB_ENV}
+          printf "GHDL_PREFIX=%s\n" "$(pwd)/lib/ghdl" >> ${GITHUB_ENV}
         else
           printf "GHDL_PREFIX=%s\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> ${GITHUB_ENV}
         fi
 
         printf "Adding GHDL to 'PATH' ...\n"
-        printf "%s\n" "$(pwd)/${{ inputs.install-directory }}/bin" >> ${GITHUB_PATH}
+        printf "%s\n" "$(pwd)/bin" >> ${GITHUB_PATH}
 
         printf "Writing step outputs ...\n"
 

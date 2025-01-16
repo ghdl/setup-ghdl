@@ -67,6 +67,8 @@ jobs:
       - name: Verify on Linux or macOS
         if: matrix.name == 'Ubuntu' || matrix.name == 'macOS'
         run: |
+          printf "%s\n" "${PATH}"
+
           which ghdl
           ghdl --version
 
