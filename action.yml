@@ -56,6 +56,12 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Update Bash on macOS
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        brew install bash
+
     - name: Download and install GHDL
       id: generic
       if: runner.os == 'Linux' || runner.os == 'macOS' || ( runner.os == 'Windows' && inputs.runtime != '' )
@@ -79,9 +85,6 @@ runs:
           osArchitecture="x86-64"
           osRuntime="native"
         elif [[ "${{ runner.os }}" == "macOS" ]]; then
-          osVersion="$(sw_vers -productVersion)"
-
-          bash --version
           if [[ "${{ runner.arch }}" == "X64" ]]; then
             osArchitecture="x86-64"
           elif [[ "${{ runner.arch }}" == "ARM64" ]]; then
@@ -91,6 +94,7 @@ runs:
             exit 1
           fi
 
+          osVersion="$(sw_vers -productVersion)"
           osName="macOS"
           osMajorVersion="${osVersion%%.*}"
           osRuntime="native"
@@ -108,7 +112,10 @@ runs:
             exit 1
           fi
 
+          cmd /c ver
+
           osName="Windows"
+          osMajorVersion="2022"
           osArchitecture="x86-64"
         else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported runner OS '${{ runner.os }}'."
@@ -134,9 +141,7 @@ runs:
         fi
 
         # Check for generally supported GHDL backend names. A more specific test per platform follows later.
-        if [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?|gcc$ ]]; then
-          printf "Backend: %s\n" "${{ inputs.backend }}"
-        else
+        if ! [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?|gcc$ ]]; then
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}'."
           exit 1
         fi
@@ -214,6 +219,7 @@ runs:
 
         downloadBase="$(jq -r '.meta."release-url"' inventory.json)"
         downloadFile="$(jq -r ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\".\"${{ inputs.backend }}\".file" inventory.json)"
+        downloadFile="${downloadFile#*/}"
         printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${downloadBase}/${downloadFile}' and extracting file ..."
         curl -L "${downloadBase}/${downloadFile}" -o "${downloadFile}"
         retCode=$?
@@ -227,6 +233,7 @@ runs:
         fi
 
         if [[ "${osRuntime}" == "native" ]]; then
+          printf "%s" "Extracting installation archive ... "
           tar -xzf "${downloadFile}" --strip-components 1
           if [[ $? -eq 0 ]]; then
             printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
@@ -266,33 +273,28 @@ runs:
         fi
 
         if [[ "${{ inputs.investigate }}" == "true" ]]; then
-          printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
-          if [[ "${osName}" != "macOS" ]]; then
-            tree -pash .
-          else
-            cd bin
-            ls -lAh .
+          if [[ "${osName}" == "macOS" ]]; then
+            printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing tree ..."
+            brew install tree
+            printf "::endgroup::\n"
           fi
+
+          printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
+          tree -pash .
           printf "::endgroup::\n"
         fi
 
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
         if [[ "${osRuntime}" == "native" ]]; then
-          tee "${GITHUB_ENV}" <<EOF
-          GHDL_PREFIX=$(pwd)/${{ inputs.install-directory }}/lib/ghdl
-          EOF
+          printf "GHDL_PREFIX=%s\n" "$(pwd)/${{ inputs.install-directory }}/lib/ghdl" >> ${GITHUB_ENV}
         else
-          tee "${GITHUB_ENV}" <<EOF
-          GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl)
-          EOF
+          printf "GHDL_PREFIX=%s\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> ${GITHUB_ENV}
         fi
 
         printf "Adding GHDL to 'PATH' ...\n"
-        tee "${GITHUB_PATH}" <<EOF
-        $(pwd)/${{ inputs.install-directory }}/bin
-        EOF
+        printf "%s\n" "$(pwd)/${{ inputs.install-directory }}/bin" >> ${GITHUB_PATH}
 
-        printf "Writing step outputs 'xxx' ...\n"
+        printf "Writing step outputs ...\n"
 
     - name: Download and install GHDL on Windows (native)
       id: Windows
