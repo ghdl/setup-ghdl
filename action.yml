@@ -67,16 +67,23 @@ runs:
           printf "shell=bash" >> $GITHUB_OUTPUT
         fi
 
-    - name: Update Bash on macOS
+    - name: Update 'Bash' on macOS
       if: runner.os == 'macOS'
       shell: bash
       run: |
         # Update Bash on macOS
         brew install bash
 
+    - name: Install 'jq' in Git Bash on Windows (native)
+      if: runner.os == 'Windows' && inputs.runtime == ''
+      shell: bash
+      run: |
+        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Download 'jq' and copy to Git Bash ..."
+        curl -L -o /usr/bin/jq.exe https://github.com/jqlang/jq/releases/latest/download/jq-win64.exe
+        printf "::endgroup::\n"
+
     - name: Download and install GHDL
       id: generic
-      if: runner.os == 'Linux' || runner.os == 'macOS' || ( runner.os == 'Windows' && inputs.runtime != '' )
       shell: ${{ steps.shell.outputs.shell }}
       run: |
         # Download and install GHDL
@@ -127,8 +134,10 @@ runs:
             printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing 'jq' file ..."
             pacman -S --noconfirm ucrt64/mingw-w64-ucrt-x86_64-jq
             printf "::endgroup::\n"
+          elif [[ "${{ inputs.runtime }}" == "" ]]; then
+            osRuntime="native"
           else
-            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported MSYS 2 runtime '${{ inputs.runtime }}'."
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported MSYS2 runtime '${{ inputs.runtime }}'."
             exit 1
           fi
 
@@ -172,11 +181,11 @@ runs:
         printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading release inventory file from '${DOWNLOAD_URL}' ..."
         curl -L "${DOWNLOAD_URL}" -o inventory.json
         retCode=$?
-        printf "::endgroup::\n"
+        printf "::endgroup::\n  Downloading release inventory "
         if [[ $retCode -eq 0 ]]; then
-          printf "%s\n" "Downloading release inventory ${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}"
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
         else
-          printf "%s\n" "Downloading release inventory ${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}"
+          printf "${ANSI_LIGHT_RED}%s\${ANSI_NOCOLOR}n" "[FAILED]"
           printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download 'inventory.json'."
           exit 1
         fi
@@ -238,27 +247,41 @@ runs:
         downloadBase="$(jq -r '.meta."release-url"' inventory.json)"
         downloadFile="$(jq -r ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\".\"${{ inputs.backend }}\".file" inventory.json)"
         downloadFile="${downloadFile#*/}"
-        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${downloadBase}/${downloadFile}' and extracting file ..."
+        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${downloadBase}/${downloadFile}' ..."
         curl -L "${downloadBase}/${downloadFile}" -o "${downloadFile}"
         retCode=$?
-        printf "::endgroup::\n"
+        printf "::endgroup::\n  Downloading GHDL installation archive "
         if [[ $retCode -eq 0 ]]; then
-          printf "%s\n" "Downloading GHDL installation archive ${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}"
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
         else
-          printf "%s\n" "Downloading GHDL installation archive ${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}"
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
           printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download '${downloadFile}'."
           exit 1
         fi
 
         if [[ "${osRuntime}" == "native" ]]; then
-          printf "%s" "Extracting installation archive ... "
-          tar -xzf "${downloadFile}" --strip-components 1
-          if [[ $? -eq 0 ]]; then
-            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
-          else
-            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
-            printf "::error title=%s::%s\n" "setup-ghdl" "Failed to extract '${downloadFile}'."
-            exit 1
+          if [[ "${osName}" == "Windows" ]]; then
+            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Extracting '${downloadFile}' ..."
+            unzip "${downloadFile}"
+            retCode=$?
+            printf "::endgroup::\n  Extracting archive "
+            if [[ $retCode -eq 0 ]]; then
+              printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+            else
+              printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+              printf "::error title=%s::%s\n" "setup-ghdl" "Failed to extract '${downloadFile}'."
+              exit 1
+            fi
+          else  # macOS, Ubuntu
+            printf "%s" "Extracting installation archive ... "
+            tar -xzf "${downloadFile}" --strip-components 1
+            if [[ $? -eq 0 ]]; then
+              printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+            else
+              printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+              printf "::error title=%s::%s\n" "setup-ghdl" "Failed to extract '${downloadFile}'."
+              exit 1
+            fi
           fi
 
           if [[ "${osName}" == "Ubuntu" ]]; then
@@ -306,68 +329,15 @@ runs:
 
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
         if [[ "${osRuntime}" == "native" ]]; then
+          printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(pwd)/lib/ghdl"
           printf "GHDL_PREFIX=%s\n" "$(pwd)/lib/ghdl" >> ${GITHUB_ENV}
         else
+          printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)"
           printf "GHDL_PREFIX=%s\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> ${GITHUB_ENV}
         fi
 
         printf "Adding GHDL to 'PATH' ...\n"
+        printf "%s >> ${GITHUB_PATH}\n" "$(pwd)/bin"
         printf "%s\n" "$(pwd)/bin" >> ${GITHUB_PATH}
 
         printf "Writing step outputs ...\n"
-
-    - name: Download and install GHDL on Windows (native)
-      id: Windows
-      if: runner.os == 'Windows' && runner.arch == 'X64' && inputs.runtime == ''
-      shell: powershell
-      run: |
-        # Download and install GHDL on Windows (native)
-        $BACKEND = "mcode"
-        $RUNTIME = "ucrt64"
-
-        if ( "${{ inputs.version }}" -eq "nightly" ) {
-          $VERSION_IN_URL =  "nightly"
-          $VERSION_IN_FILE = "${{ steps.variables.outputs.nightly-version }}"
-
-          echo "Version: nightly (${VERSION_IN_FILE})"
-        } elseif ( "${{ inputs.version }}" -eq "latest" ) {
-          $VERSION_IN_URL =  "${{ steps.variables.outputs.nightly-version }}"
-          $VERSION_IN_FILE = "${{ steps.variables.outputs.nightly-version }}"
-
-          echo "Version: nightly (${VERSION_IN_FILE})"
-        } elseif ( "${{ inputs.version }}" -match '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$' ) {
-          $VERSION_IN_URL =  "${{ inputs.version }}"
-          $VERSION_IN_FILE = "${{ inputs.version }}"
-
-          echo "Version: ${{ inputs.version }}"
-        } else {
-          echo "::error title=setup-ghdl::Unsupported GHDL version '${{ inputs.version }}'."
-          exit 1
-        }
-
-        if ( "${{ inputs.backend }}" -eq "mcode" ) {
-          echo "Backend: ${{ inputs.backend }}"
-        } else {
-          echo "::error title=setup-ghdl::Unsupported GHDL backend '${{ inputs.backend }}'."
-          exit 1
-        }
-
-        echo "Creating installation directory '${{ inputs.install-directory }}' ..."
-        mkdir "${{ inputs.install-directory }}" | Out-Null
-        cd "${{ inputs.install-directory }}"
-
-        $DOWNLOAD_URL = "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${BACKEND}-${VERSION_IN_FILE}-${RUNTIME}.zip"
-        echo "Downloading asset from '${DOWNLOAD_URL}' ..."
-        curl "${DOWNLOAD_URL}" -o ghdl.zip
-
-        echo "Extracting zip file 'ghdl.zip' ..."
-        Expand-Archive -Path "ghdl.zip" -DestinationPath "."
-
-        echo "Removing zip file 'ghdl.zip' ..."
-        rm "ghdl.zip"
-
-        echo "Setting environment variable 'GHDL_PREFIX' ..."
-        echo "GHDL_PREFIX=$($(pwd).Path)\lib\ghdl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-        echo "Adding GHDL to 'PATH' ..."
-        echo "$($(pwd).Path)\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
