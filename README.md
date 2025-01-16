@@ -7,10 +7,21 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
 
 ## Features
 
-* Select GHDL version (tagged release like `5.0.0`, `latest` (stable) release or `nightly` release (rolling release)).
-* Select GHDL backend (LLVM, LLVM-JIT, mcode, GCC).
+* Select GHDL version:
+  * tagged release like `5.0.0`
+  * `latest` (stable) release, or
+  * `nightly` release (rolling release).
+* Select GHDL backend:
+  * mcode
+  * LLVM
+  * LLVM-JIT (new)
+  * GCC (deprecated).
 * Activate an investigation mode (check and show GHDL installation, ...).
-* Supported runner OS' (automatically detected): Ubuntu 2024.04, macOS (x86-64), macOS (aarch64), Windows.
+* Supported runner OS' provided by GitHub (automatically detected):
+  * Ubuntu 24.04 (LTS),
+  * macOS-13 (x86-64),
+  * macOS-14 (aarch64)
+  * Windows Server 2022.
 
 ## Usage
 

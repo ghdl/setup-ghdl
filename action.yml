@@ -56,301 +56,294 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Variables
-      id: variables
+    - name: Detect correct shell
+      id: shell
       shell: bash
       run: |
-        tee "${GITHUB_OUTPUT}" <<EOF
-        latest-version=5.0.0
-        latest-version-msys2=5.0.0-1
-        nightly-version=5.0.0-dev
-        nightly-version-msys2=5.0.0.dev-1
-        EOF
+        # Detect correct shell
+        if [[ "${{ runner.os }}" == "Windows" && "${{ inputs.runtime }}" != "" ]]; then
+          printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
+        else
+          printf "shell=bash" >> $GITHUB_OUTPUT
+        fi
 
-    - name: Download and install GHDL on Ubuntu 2024.04 (x86-64)
-      id: ubuntu
-      if: runner.os == 'Linux' && runner.arch == 'X64'
+    - name: Update 'Bash' on macOS
+      if: runner.os == 'macOS'
       shell: bash
       run: |
-        # Download and install GHDL on Ubuntu 2024.04 (x86-64)
-        ANSI_LIGHT_BLUE="\e[94m"
-        ANSI_NOCOLOR=$'\x1b[0m'
+        # Update Bash on macOS
+        brew install bash
 
-        source /etc/lsb-release
-
-        if [[ "${DISTRIB_RELEASE}" != "24.04" ]]; then
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported Ubuntu version '${DISTRIB_RELEASE}'."
-          exit 1
-        else
-          printf "Runner:  %s\n" "Ubuntu ${DISTRIB_RELEASE} (x86-64)"
-        fi
-
-        if [[ "${{ inputs.version }}" == "nightly" ]]; then
-          VERSION_IN_URL="nightly"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
-
-          printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" == "latest" ]]; then
-          VERSION_IN_URL="${{ steps.variables.outputs.nightly-version }}"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
-
-          printf "Version: %s\n" "latest (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
-          VERSION_IN_URL="${{ inputs.version }}"
-          VERSION_IN_FILE="${{ inputs.version }}"
-
-          printf "Version: %s\n" "${{ inputs.version }}"
-        else
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL version '${{ inputs.version }}'."
-          exit 1
-        fi
-
-        if [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?|gcc$ ]]; then
-          printf "Backend: %s\n" "${{ inputs.backend }}"
-        else
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}'."
-          exit 1
-        fi
-
-        (
-          printf "Creating installation directory '${{ inputs.install-directory }}' ...\n"
-          mkdir -p "${{ inputs.install-directory }}"
-          cd "${{ inputs.install-directory }}"
-
-          DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-ubuntu${DISTRIB_RELEASE}-x86_64.tar.gz"
-          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset and extracting '${DOWNLOAD_URL}' file ..."
-          curl -L "${DOWNLOAD_URL}" | tar -xz --strip-components 1
-          printf "::endgroup::\n"
-
-          if [[ "${{ inputs.investigate }}" == "true" ]]; then
-            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
-            tree -pash .
-            printf "::endgroup::\n"
-          fi
-
-          printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Installing dependencies from './ubuntu.requirements' using 'apt-get' ..."
-          sudo xargs --no-run-if-empty -a ./ubuntu.requirements -- apt-get install -y --no-install-recommends
-          printf "::endgroup::\n"
-        )
-
-        printf "Setting environment variable 'GHDL_PREFIX' ...\n"
-        tee "${GITHUB_ENV}" <<EOF
-        GHDL_PREFIX=$(pwd)/${{ inputs.install-directory }}/lib/ghdl
-        EOF
-
-        printf "Adding GHDL to 'PATH' ...\n"
-        tee "${GITHUB_PATH}" <<EOF
-        $(pwd)/${{ inputs.install-directory }}/bin
-        EOF
-
-        printf "Writing step outputs 'xxx' ...\n"
-
-    - name: Download and install GHDL on macOS (${{ runner.arch }})
-      id: macOSIntel
-      if: runner.os == 'macOS'  && ( runner.arch == 'X64' || runner.arch == 'ARM64' )
+    - name: Install 'jq' in Git Bash on Windows (native)
+      if: runner.os == 'Windows' && inputs.runtime == ''
       shell: bash
       run: |
-        # Download and install GHDL on macOS (${{ runner.arch }})
-        ANSI_LIGHT_BLUE="\e[94m"
-        ANSI_NOCOLOR=$'\x1b[0m'
+        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Download 'jq' and copy to Git Bash ..."
+        curl -L -o /usr/bin/jq.exe https://github.com/jqlang/jq/releases/latest/download/jq-win64.exe
+        printf "::endgroup::\n"
 
-        # TODO: check macOS version
-
-        if [[ "${{ runner.arch }}" == "X64" ]]; then
-          OS_RELEASE=13
-          OS_ARCH=x86_64
-        elif [[ "${{ runner.arch }}" == "ARM64" ]]; then
-          OS_RELEASE=14
-          OS_ARCH=aarch64
-        else
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported macOS architecture '${{ runner.arch }}'."
-          exit 1
-        fi
-        printf "macOS:   macOS %s - %s\n" "${OS_RELEASE}" "${OS_ARCH//_/-}"
-
-        if [[ "${{ inputs.version }}" == "nightly" ]]; then
-          VERSION_IN_URL="nightly"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
-
-          printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" == "latest" ]]; then
-          VERSION_IN_URL="${{ steps.variables.outputs.nightly-version }}"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
-
-          printf "Version: %s\n" "latest (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
-          VERSION_IN_URL="${{ inputs.version }}"
-          VERSION_IN_FILE="${{ inputs.version }}"
-
-          printf "Version: %s\n" "${{ inputs.version }}"
-        else
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL version '${{ inputs.version }}'."
-          exit 1
-        fi
-
-        if [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?$ ]]; then
-          printf "Backend: %s\n" "${{ inputs.backend }}"
-        else
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}'."
-          exit 1
-        fi
-
-        (
-          printf "Creating installation directory '${{ inputs.install-directory }}' ...\n"
-          mkdir -p "${{ inputs.install-directory }}"
-          cd "${{ inputs.install-directory }}"
-
-          DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-macos${OS_RELEASE}-${OS_ARCH}.tar.gz"
-          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset and extracting '${DOWNLOAD_URL}' file ..."
-          curl -L "${DOWNLOAD_URL}" | tar -xz --strip-components 1
-          printf "::endgroup::\n"
-
-          if [[ "${{ inputs.investigate }}" == "true" ]]; then
-            cd bin
-            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
-
-            # tree is not supported on macOS
-            # tree -pash .
-            ls -lAh .
-            printf "::endgroup::\n"
-          fi
-        )
-
-        printf "Setting environment variable 'GHDL_PREFIX' ...\n"
-        tee "${GITHUB_ENV}" <<EOF
-        GHDL_PREFIX=$(pwd)/${{ inputs.install-directory }}/lib/ghdl
-        EOF
-
-        printf "Adding GHDL to 'PATH' ...\n"
-        tee "${GITHUB_PATH}" <<EOF
-        $(pwd)/${{ inputs.install-directory }}/bin
-        EOF
-
-        printf "Writing step outputs 'xxx' ...\n"
-
-    - name: Download and install GHDL on Windows (native)
-      id: Windows
-      if: runner.os == 'Windows' && runner.arch == 'X64' && inputs.runtime == ''
-      shell: powershell
+    - name: Download and install GHDL
+      id: generic
+      shell: ${{ steps.shell.outputs.shell }}
       run: |
-        # Download and install GHDL on Windows (native)
-        $BACKEND = "mcode"
-        $RUNTIME = "ucrt64"
-
-        if ( "${{ inputs.version }}" -eq "nightly" ) {
-          $VERSION_IN_URL =  "nightly"
-          $VERSION_IN_FILE = "${{ steps.variables.outputs.nightly-version }}"
-
-          echo "Version: nightly (${VERSION_IN_FILE})"
-        } elseif ( "${{ inputs.version }}" -eq "latest" ) {
-          $VERSION_IN_URL =  "${{ steps.variables.outputs.nightly-version }}"
-          $VERSION_IN_FILE = "${{ steps.variables.outputs.nightly-version }}"
-
-          echo "Version: nightly (${VERSION_IN_FILE})"
-        } elseif ( "${{ inputs.version }}" -match '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$' ) {
-          $VERSION_IN_URL =  "${{ inputs.version }}"
-          $VERSION_IN_FILE = "${{ inputs.version }}"
-
-          echo "Version: ${{ inputs.version }}"
-        } else {
-          echo "::error title=setup-ghdl::Unsupported GHDL version '${{ inputs.version }}'."
-          exit 1
-        }
-
-        if ( "${{ inputs.backend }}" -eq "mcode" ) {
-          echo "Backend: ${{ inputs.backend }}"
-        } else {
-          echo "::error title=setup-ghdl::Unsupported GHDL backend '${{ inputs.backend }}'."
-          exit 1
-        }
-
-        echo "Creating installation directory '${{ inputs.install-directory }}' ..."
-        mkdir "${{ inputs.install-directory }}" | Out-Null
-        cd "${{ inputs.install-directory }}"
-
-        $DOWNLOAD_URL = "https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${BACKEND}-${VERSION_IN_FILE}-${RUNTIME}.zip"
-        echo "Downloading asset from '${DOWNLOAD_URL}' ..."
-        curl "${DOWNLOAD_URL}" -o ghdl.zip
-
-        echo "Extracting zip file 'ghdl.zip' ..."
-        Expand-Archive -Path "ghdl.zip" -DestinationPath "."
-
-        echo "Removing zip file 'ghdl.zip' ..."
-        rm "ghdl.zip"
-
-        echo "Setting environment variable 'GHDL_PREFIX' ..."
-        echo "GHDL_PREFIX=$($(pwd).Path)\lib\ghdl" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-        echo "Adding GHDL to 'PATH' ..."
-        echo "$($(pwd).Path)\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-    - name: Download and install GHDL on Windows + MSYS2 (x86-64)
-      id: MSYS2
-      if: runner.os == 'Windows' && runner.arch == 'X64' && ( inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64' )
-      shell: 'msys2 {0}'
-      run: |
-        # Download and install GHDL on Windows + MSYS2 (x86-64)
+        # Download and install GHDL
         ANSI_LIGHT_RED=$'\x1b[91m'
         ANSI_LIGHT_GREEN=$'\x1b[92m'
         ANSI_LIGHT_BLUE="\e[94m"
         ANSI_NOCOLOR=$'\x1b[0m'
 
-        if [[ ${{ inputs.runtime }} == "mingw64" ]]; then
-          RUNTIME=""
-        elif [[ ${{ inputs.runtime }} == "ucrt64" ]]; then
-          RUNTIME="ucrt-"
+        if [[ "${{ runner.os }}" == "Linux" ]]; then
+          if [[ "${{ runner.arch }}" != "X64" ]]; then
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported architecture '${{ runner.arch }}' for Ubuntu."
+            exit 1
+          fi
+          source /etc/lsb-release
+
+          osName="Ubuntu"
+          osMajorVersion=${DISTRIB_RELEASE}
+          osArchitecture="x86-64"
+          osRuntime="native"
+        elif [[ "${{ runner.os }}" == "macOS" ]]; then
+          if [[ "${{ runner.arch }}" == "X64" ]]; then
+            osArchitecture="x86-64"
+          elif [[ "${{ runner.arch }}" == "ARM64" ]]; then
+            osArchitecture="aarch64"
+          else
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported macOS architecture '${{ runner.arch }}'."
+            exit 1
+          fi
+
+          osVersion="$(sw_vers -productVersion)"
+          osName="macOS"
+          osMajorVersion="${osVersion%%.*}"
+          osRuntime="native"
+        elif [[ "${{ runner.os }}" == "Windows" ]]; then
+          if [[ "${{ runner.arch }}" != "X64" ]]; then
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported architecture '${{ runner.arch }}' for Windows."
+            exit 1
+          fi
+          if [[ "${{ inputs.runtime }}" == "mingw64" ]]; then
+            osRuntime="mingw64"
+
+            printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing 'jq' file ..."
+            pacman -S --noconfirm mingw64/mingw-w64-x86_64-jq
+            printf "::endgroup::\n"
+          elif [[ "${{ inputs.runtime }}" == "ucrt64" ]]; then
+            osRuntime="ucrt64"
+
+            printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing 'jq' file ..."
+            pacman -S --noconfirm ucrt64/mingw-w64-ucrt-x86_64-jq
+            printf "::endgroup::\n"
+          elif [[ "${{ inputs.runtime }}" == "" ]]; then
+            osRuntime="native"
+          else
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported MSYS2 runtime '${{ inputs.runtime }}'."
+            exit 1
+          fi
+
+          osName="Windows"
+          osMajorVersion="2022"
+          osArchitecture="x86-64"
         else
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported MSYS 2 runtime '${{ inputs.runtime }}'."
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported runner OS '${{ runner.os }}'."
           exit 1
         fi
-        printf "MSYS2:   %s\n" "${{ inputs.runtime }}"
 
-        if [[ "${{ inputs.version }}" == "nightly" ]]; then
-          VERSION_IN_URL="nightly"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version-msys2 }}"
-
-          printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" == "latest" ]]; then
-          VERSION_IN_URL="${{ steps.variables.outputs.nightly-version }}"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version-msys2 }}"
-
-          printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
+        # A generic test for supported named versions or tagged versions.
+        if [[ "${{ inputs.version }}" == "latest" ]]; then
+          # TODO: could be read from nightly's inventory.json
+          VERSION_IN_URL="5.0.0"
+        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}|nightly$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
-          VERSION_IN_FILE="${{ inputs.version }}"
-
-          printf "Version: %s\n" "${{ inputs.version }}"
         else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL version '${{ inputs.version }}'."
           exit 1
         fi
 
-        if [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?$ ]]; then
-          printf "Backend: %s\n" "${{ inputs.backend }}"
-        else
+        # Check for generally supported GHDL backend names. A more specific test per platform follows later.
+        if ! [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?|gcc$ ]]; then
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}'."
           exit 1
         fi
 
-        DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/mingw-w64-${RUNTIME}x86_64-ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-any.pkg.tar.zst"
-        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${DOWNLOAD_URL}' ..."
-        curl -L "${DOWNLOAD_URL}" -o ghdl.pkg.tar.zst
-        printf "::endgroup::\n"
+        printf "Creating installation directory '${{ inputs.install-directory }}' ...\n"
+        mkdir -p "${{ inputs.install-directory }}"
+        cd "${{ inputs.install-directory }}"
 
-        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing 'ghdl.pkg.tar.zst' file ..."
-        pacman -U --noconfirm ghdl.pkg.tar.zst
-        printf "::endgroup::\n"
-
-        printf "Deleting '%s' ... " "ghdl.pkg.tar.zst"
-        rm "ghdl.pkg.tar.zst"
-        if [[ $? -eq 0 ]]; then
-          printf "%s\n" "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}"
+        DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/inventory.json"
+        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading release inventory file from '${DOWNLOAD_URL}' ..."
+        curl -L "${DOWNLOAD_URL}" -o inventory.json
+        retCode=$?
+        printf "::endgroup::\n  Downloading release inventory "
+        if [[ $retCode -eq 0 ]]; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
         else
-          printf "%s\n" "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}"
-          printf "::warning title=%s::%s\n" "setup-ghdl" "Failed to remove 'ghdl.pkg.tar.zst'."
+          printf "${ANSI_LIGHT_RED}%s\${ANSI_NOCOLOR}n" "[FAILED]"
+          printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download 'inventory.json'."
+          exit 1
+        fi
+
+        printf "%s" "Check if runner OS '${osName}' is supported ... "
+        if jq -e ".files.ghdl | has(\"${osName,,}\")" inventory.json > /dev/null; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported runner OS '${osName}'."
+          exit 1
+        fi
+
+        printf "%s" "Check if ${osName} version '${osMajorVersion}' is supported ... "
+        if jq -e ".files.ghdl.\"${osName,,}\" | has(\"${osMajorVersion}\")" inventory.json > /dev/null; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported ${osName} version '${osMajorVersion}'."
+          exit 1
+        fi
+
+        printf "%s" "Check if ${osName} architecture '${osArchitecture}' is supported ... "
+        if jq -e ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\" | has(\"${osArchitecture}\")" inventory.json > /dev/null; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported ${osName} architecture '${osArchitecture}'."
+          exit 1
+        fi
+
+        if [[ "${osName}" == "Windows" ]]; then
+          printf "%s" "Check if MSYS2 runtime '${osRuntime}' is supported ... "
+          if jq -e ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\" | has(\"${osRuntime}\")" inventory.json > /dev/null; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported MSYS2 runtime '${osRuntime}'."
+            exit 1
+          fi
+        fi
+
+        printf "%s" "Check if GHDL backend is supported for this runner OS version ... "
+        if jq -e ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\" | has(\"${{ inputs.backend }}\")" inventory.json > /dev/null; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}' for ${osName} ${osMajorVersion}."
+          exit 1
+        fi
+
+        printf "Runner OS:     ${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "${osName} ${osMajorVersion} (${osArchitecture})"
+        printf "GHDL Backend:  ${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "${{ inputs.backend }}"
+        printf "GHDL Version:  ${ANSI_LIGHT_BLUE}%s (Git: %s)${ANSI_NOCOLOR}\n" "$(jq -r '.meta.version' inventory.json)" "$(jq -r '.meta."git-hash"' inventory.json)"
+        if [[ "${osName}" == "Windows" ]]; then
+          printf "MSYS2 Runtime: ${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "${osRuntime}"
+        fi
+
+        downloadBase="$(jq -r '.meta."release-url"' inventory.json)"
+        downloadFile="$(jq -r ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\".\"${{ inputs.backend }}\".file" inventory.json)"
+        downloadFile="${downloadFile#*/}"
+        printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${downloadBase}/${downloadFile}' ..."
+        curl -L "${downloadBase}/${downloadFile}" -o "${downloadFile}"
+        retCode=$?
+        printf "::endgroup::\n  Downloading GHDL installation archive "
+        if [[ $retCode -eq 0 ]]; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+          printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download '${downloadFile}'."
+          exit 1
+        fi
+
+        if [[ "${osRuntime}" == "native" ]]; then
+          if [[ "${osName}" == "Windows" ]]; then
+            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Extracting '${downloadFile}' ..."
+            unzip "${downloadFile}"
+            retCode=$?
+            printf "::endgroup::\n  Extracting archive "
+            if [[ $retCode -eq 0 ]]; then
+              printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+            else
+              printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+              printf "::error title=%s::%s\n" "setup-ghdl" "Failed to extract '${downloadFile}'."
+              exit 1
+            fi
+          else  # macOS, Ubuntu
+            printf "%s" "Extracting installation archive ... "
+            tar -xzf "${downloadFile}" --strip-components 1
+            if [[ $? -eq 0 ]]; then
+              printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+            else
+              printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+              printf "::error title=%s::%s\n" "setup-ghdl" "Failed to extract '${downloadFile}'."
+              exit 1
+            fi
+          fi
+
+          if [[ "${osName}" == "Ubuntu" ]]; then
+            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Installing dependencies from './ubuntu.requirements' using 'apt-get' ..."
+            sudo xargs --no-run-if-empty -a ./ubuntu.requirements -- apt-get install -y --no-install-recommends
+            printf "::endgroup::\n"
+          fi
+        else
+          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing '${downloadFile}' file ..."
+          pacman -U --noconfirm ${downloadFile}
+          printf "::endgroup::\n"
+        fi
+
+        printf "Deleting '%s' ... " "${downloadFile}"
+        rm "${downloadFile}"
+        if [[ $? -eq 0 ]]; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+          printf "::warning title=%s::%s\n" "setup-ghdl" "Failed to remove '${downloadFile}'."
+        fi
+
+        printf "%s" "Removing inventory file 'inventory.json' ... "
+        rm "inventory.json"
+        if [[ $? -eq 0 ]]; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+          printf "::warning title=%s::%s\n" "setup-ghdl" "Couldn't remove 'inventory.json'."
+        fi
+
+        if [[ "${{ inputs.investigate }}" == "true" ]]; then
+          if [[ "${osName}" == "macOS" ]]; then
+            printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Installing tree ..."
+            brew install tree
+            printf "::endgroup::\n"
+          fi
+
+          if ! [[ "${osName}" == "Windows" && "${osRuntime}" != "" ]]; then
+            printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
+            tree -pash .
+            printf "::endgroup::\n"
+          fi
         fi
 
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
-        tee "${GITHUB_ENV}" <<EOF
-        GHDL_PREFIX=$(realpath $(dirname $(which ghdl))/../lib/ghdl)
-        EOF
+        if [[ "${osRuntime}" == "native" ]]; then
+          if [[ "${osName}" != "Windows" ]]; then
+            printf "  GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(pwd)/lib/ghdl"
+            printf "GHDL_PREFIX=%s\n" "$(pwd)/lib/ghdl" >> ${GITHUB_ENV}
+          else
+            printf "  GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(cygpath -w "$(pwd)/lib/ghdl")"
+            printf "GHDL_PREFIX=%s\n" "$(cygpath -w "$(pwd)/lib/ghdl")" >> ${GITHUB_ENV}
+          fi
+        else  # MSYS2 packages -> search installation path via which
+          printf "  GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)"
+          printf "GHDL_PREFIX=%s\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> ${GITHUB_ENV}
+        fi
+
+        printf "Adding GHDL to 'PATH' ...\n"
+        if [[ "${osRuntime}" == "native" ]]; then
+          if [[ "${osName}" != "Windows" ]]; then
+            printf "  %s >> ${GITHUB_PATH}\n" "$(pwd)/bin"
+            printf "%s\n" "$(pwd)/bin" >> ${GITHUB_PATH}
+          else
+            printf "  %s >> ${GITHUB_PATH}\n" "$(cygpath -w "$(pwd)/bin")"
+            printf "%s\n" "$(cygpath -w "$(pwd)/bin")" >> ${GITHUB_PATH}
+          fi
+        fi
+
+        printf "Writing step outputs ...\n"
+        printf "  ❌ NOT IMPLEMENTED ❌\n"
