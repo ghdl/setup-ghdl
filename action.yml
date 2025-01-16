@@ -329,15 +329,27 @@ runs:
 
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
         if [[ "${osRuntime}" == "native" ]]; then
-          printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(pwd)/lib/ghdl"
-          printf "GHDL_PREFIX=%s\n" "$(pwd)/lib/ghdl" >> ${GITHUB_ENV}
-        else
+          if [[ "${osName}" != "Windows" ]]; then
+            printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(pwd)/lib/ghdl"
+            printf "GHDL_PREFIX=%s\n" "$(pwd)/lib/ghdl" >> ${GITHUB_ENV}
+          else
+            printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(cygpath -w "$(pwd)/lib/ghdl")"
+            printf "GHDL_PREFIX=%s\n" "$(cygpath -w "$(pwd)/lib/ghdl")" >> ${GITHUB_ENV}
+          fi
+        else  # MSYS2 packages -> search installation path via which
           printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)"
           printf "GHDL_PREFIX=%s\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> ${GITHUB_ENV}
         fi
 
         printf "Adding GHDL to 'PATH' ...\n"
-        printf "%s >> ${GITHUB_PATH}\n" "$(pwd)/bin"
-        printf "%s\n" "$(pwd)/bin" >> ${GITHUB_PATH}
+        if [[ "${osRuntime}" == "native" ]]; then
+          if [[ "${osName}" != "Windows" ]]; then
+            printf "%s >> ${GITHUB_PATH}\n" "$(pwd)/bin"
+            printf "%s\n" "$(pwd)/bin" >> ${GITHUB_PATH}
+          else
+            printf "%s >> ${GITHUB_PATH}\n" "$(cygpath -w "$(pwd)/bin")"
+            printf "%s\n" "$(cygpath -w "$(pwd)/bin")" >> ${GITHUB_PATH}
+          fi
+        fi
 
         printf "Writing step outputs ...\n"
