@@ -51,6 +51,16 @@ jobs:
         shell: bash
 
     steps:
+      - name: Detect correct shell
+        id: detect
+        run: |
+          # Detect correct shell
+          if [[ "${{ matrix.name }}" == "Windows" && "${{ matrix.runtime }}" != "" ]]; then
+            printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
+          else
+            printf "shell=bash" >> $GITHUB_OUTPUT
+          fi
+
       - name: 🟦 Setup MSYS2 for ${{ matrix.runtime }}
         uses: msys2/setup-msys2@v2
         if: matrix.runtime != ''
@@ -66,24 +76,24 @@ jobs:
           runtime: ${{ matrix.runtime }}
           investigate: true
 
-      - name: Verify on Linux or macOS
-        if: matrix.name == 'Ubuntu' || matrix.name == 'macOS'
+      - name: Verify on Linux, macOS and Windows (native)
+        if: matrix.name == 'Linux' || matrix.name == 'macOS' || ( matrix.name == 'Windows' && matrix.runtime == '' )
         run: |
-          printf "%s\n" "${PATH}"
+          printf "which ghdl: %s\n" "$(which ghdl)"
 
-          which ghdl
-          ghdl --version
-
-      - name: Verify on Windows (native)
-        if: matrix.name == 'Windows' && matrix.runtime == ''
-        shell: powershell
-        run: |
-          echo $(Get-Command ghdl).Source
           ghdl --version
 
       - name: Verify on Windows + MSYS2
         if: matrix.name == 'Windows' && matrix.runtime != ''
-        shell: 'msys2 {0}'
+        shell: "msys2 {0}"
         run: |
-          which ghdl
+          printf "which ghdl: %s\n" "$(which ghdl)"
+
+          ghdl --version
+
+      - name: Verify on Windows (native) with Powershell
+        if: matrix.name == 'Windows' && matrix.runtime == ''
+        shell: powershell
+        run: |
+          echo $(Get-Command ghdl).Source
           ghdl --version
