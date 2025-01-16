@@ -150,18 +150,11 @@ runs:
         fi
 
         # A generic test for supported named versions or tagged versions.
-        if [[ "${{ inputs.version }}" == "nightly" ]]; then
-          VERSION_IN_URL="nightly"
-
-          printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" == "latest" ]]; then
+        if [[ "${{ inputs.version }}" == "latest" ]]; then
+          # TODO: could be read from nightly's inventory.json
           VERSION_IN_URL="5.0.0"
-
-          printf "Version: %s\n" "latest (${VERSION_IN_FILE})"
-        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
+        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}|nightly$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
-
-          printf "Version: %s\n" "${{ inputs.version }}"
         else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL version '${{ inputs.version }}'."
           exit 1
@@ -330,26 +323,27 @@ runs:
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
         if [[ "${osRuntime}" == "native" ]]; then
           if [[ "${osName}" != "Windows" ]]; then
-            printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(pwd)/lib/ghdl"
+            printf "  GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(pwd)/lib/ghdl"
             printf "GHDL_PREFIX=%s\n" "$(pwd)/lib/ghdl" >> ${GITHUB_ENV}
           else
-            printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(cygpath -w "$(pwd)/lib/ghdl")"
+            printf "  GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(cygpath -w "$(pwd)/lib/ghdl")"
             printf "GHDL_PREFIX=%s\n" "$(cygpath -w "$(pwd)/lib/ghdl")" >> ${GITHUB_ENV}
           fi
         else  # MSYS2 packages -> search installation path via which
-          printf "GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)"
+          printf "  GHDL_PREFIX=%s >> ${GITHUB_ENV}\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)"
           printf "GHDL_PREFIX=%s\n" "$(realpath $(dirname $(which ghdl))/../lib/ghdl)" >> ${GITHUB_ENV}
         fi
 
         printf "Adding GHDL to 'PATH' ...\n"
         if [[ "${osRuntime}" == "native" ]]; then
           if [[ "${osName}" != "Windows" ]]; then
-            printf "%s >> ${GITHUB_PATH}\n" "$(pwd)/bin"
+            printf "  %s >> ${GITHUB_PATH}\n" "$(pwd)/bin"
             printf "%s\n" "$(pwd)/bin" >> ${GITHUB_PATH}
           else
-            printf "%s >> ${GITHUB_PATH}\n" "$(cygpath -w "$(pwd)/bin")"
+            printf "  %s >> ${GITHUB_PATH}\n" "$(cygpath -w "$(pwd)/bin")"
             printf "%s\n" "$(cygpath -w "$(pwd)/bin")" >> ${GITHUB_PATH}
           fi
         fi
 
         printf "Writing step outputs ...\n"
+        printf "  ❌ NOT IMPLEMENTED ❌\n"
