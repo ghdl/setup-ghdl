@@ -56,48 +56,30 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Variables
-      id: variables
-      shell: bash
-      run: |
-        tee "${GITHUB_OUTPUT}" <<EOF
-        latest-version=5.0.0
-        latest-version-msys2=5.0.0-1
-        nightly-version=5.0.0-dev
-        nightly-version-msys2=5.0.0.dev-1
-        EOF
-
     - name: Download and install GHDL on Ubuntu 2024.04 (x86-64)
       id: ubuntu
       if: runner.os == 'Linux' && runner.arch == 'X64'
       shell: bash
       run: |
         # Download and install GHDL on Ubuntu 2024.04 (x86-64)
+        ANSI_LIGHT_RED=$'\x1b[91m'
+        ANSI_LIGHT_GREEN=$'\x1b[92m'
         ANSI_LIGHT_BLUE="\e[94m"
         ANSI_NOCOLOR=$'\x1b[0m'
 
         source /etc/lsb-release
 
-        if [[ "${DISTRIB_RELEASE}" != "24.04" ]]; then
-          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported Ubuntu version '${DISTRIB_RELEASE}'."
-          exit 1
-        else
-          printf "Runner:  %s\n" "Ubuntu ${DISTRIB_RELEASE} (x86-64)"
-        fi
-
+        # A generic test for supported named versions or tagged versions.
         if [[ "${{ inputs.version }}" == "nightly" ]]; then
           VERSION_IN_URL="nightly"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
 
           printf "Version: %s\n" "nightly (${VERSION_IN_FILE})"
         elif [[ "${{ inputs.version }}" == "latest" ]]; then
-          VERSION_IN_URL="${{ steps.variables.outputs.nightly-version }}"
-          VERSION_IN_FILE="${{ steps.variables.outputs.nightly-version }}"
+          VERSION_IN_URL="5.0.0"
 
           printf "Version: %s\n" "latest (${VERSION_IN_FILE})"
         elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
-          VERSION_IN_FILE="${{ inputs.version }}"
 
           printf "Version: %s\n" "${{ inputs.version }}"
         else
@@ -105,6 +87,7 @@ runs:
           exit 1
         fi
 
+        # Check for generally supported GHDL backend names. A more specific test per platform follows later.
         if [[ "${{ inputs.backend }}" =~ ^mcode|llvm(-jit)?|gcc$ ]]; then
           printf "Backend: %s\n" "${{ inputs.backend }}"
         else
@@ -117,10 +100,54 @@ runs:
           mkdir -p "${{ inputs.install-directory }}"
           cd "${{ inputs.install-directory }}"
 
-          DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/ghdl-${{ inputs.backend }}-${VERSION_IN_FILE}-ubuntu${DISTRIB_RELEASE}-x86_64.tar.gz"
-          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset and extracting '${DOWNLOAD_URL}' file ..."
-          curl -L "${DOWNLOAD_URL}" | tar -xz --strip-components 1
+          DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/inventory.json"
+          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading release inventory file from '${DOWNLOAD_URL}' ..."
+          curl -L "${DOWNLOAD_URL}" -o inventory.json
+          retCode=$?
           printf "::endgroup::\n"
+          if [[ $retCode -eq 0 ]]; then
+            printf "%s\n" "Downloading release inventory ${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}"
+          else
+            printf "%s\n" "Downloading release inventory ${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download 'inventory.json'."
+            exit 1
+          fi
+
+          printf "%s" "Check if runner OS version '${DISTRIB_RELEASE}' is supported ... "
+          if jq -e ".files.ghdl.ubuntu | has(\"${DISTRIB_RELEASE}\")" inventory.json > /dev/null; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported Ubuntu version '${DISTRIB_RELEASE}'."
+            exit 1
+          fi
+
+          printf "%s" "Check if GHDL backend is supported for this runner OS version ... "
+          if jq -e ".files.ghdl.ubuntu.\"${DISTRIB_RELEASE}\".\"x86-64\".native | has(\"${{ inputs.backend }}\")" inventory.json > /dev/null; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}' for Ubuntu ${DISTRIB_RELEASE}."
+            exit 1
+          fi
+
+          printf "Runner OS:    ${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Ubuntu ${DISTRIB_RELEASE} (x86-64)"
+          printf "GHDL Backend: ${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "${{ inputs.backend }}"
+          printf "GHDL Version: ${ANSI_LIGHT_BLUE}%s (Git: %s)${ANSI_NOCOLOR}\n" "$(jq -r '.meta.version' inventory.json)" "$(jq -r '.meta."git-hash"' inventory.json)"
+
+          downloadBase="$(jq -r '.meta."release-url"' inventory.json)"
+          downloadFile="$(jq -r ".files.ghdl.ubuntu.\"${DISTRIB_RELEASE}\".\"x86-64\".native.\"${{ inputs.backend }}\".file" inventory.json)"
+          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${downloadBase}/${downloadFile}' and extracting file ..."
+          curl -L "${downloadBase}/${downloadFile}" | tar -xz --strip-components 1
+          retCode=$?
+          printf "::endgroup::\n"
+          if [[ $retCode -eq 0 ]]; then
+            printf "%s\n" "Downloading GHDL installation archive ${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}"
+          else
+            printf "%s\n" "Downloading GHDL installation archive ${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download '${downloadFile}'."
+            exit 1
+          fi
 
           if [[ "${{ inputs.investigate }}" == "true" ]]; then
             printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Content of '$(pwd)'"
@@ -131,6 +158,15 @@ runs:
           printf "::group::${ANSI_LIGHT_BLUE}%s.${ANSI_NOCOLOR}\n" "Installing dependencies from './ubuntu.requirements' using 'apt-get' ..."
           sudo xargs --no-run-if-empty -a ./ubuntu.requirements -- apt-get install -y --no-install-recommends
           printf "::endgroup::\n"
+
+          printf "%s" "Removing zip file 'inventory.json' ... "
+          rm "inventory.json"
+          if [[ $? -eq 0 ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "setup-ghdl" "Couldn't remove 'inventory.json'."
+          fi
         )
 
         printf "Setting environment variable 'GHDL_PREFIX' ...\n"
@@ -344,9 +380,9 @@ runs:
         printf "Deleting '%s' ... " "ghdl.pkg.tar.zst"
         rm "ghdl.pkg.tar.zst"
         if [[ $? -eq 0 ]]; then
-          printf "%s\n" "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}"
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
         else
-          printf "%s\n" "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}"
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
           printf "::warning title=%s::%s\n" "setup-ghdl" "Failed to remove 'ghdl.pkg.tar.zst'."
         fi
 

@@ -28,6 +28,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-22.04', 'runtime': '',        'backend': 'mcode'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'xcode'}
           - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'mcode'}
           - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm'}
           - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm-jit'}
@@ -55,7 +57,7 @@ jobs:
           update: true
 
       - name: Setup GHDL ${{ matrix.backend }}
-        uses: paebbels/setup-ghdl@dev
+        uses: ghdl/setup-ghdl@dev
         with:
           version: nightly
           backend: ${{ matrix.backend }}
