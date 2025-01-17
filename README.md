@@ -1,3 +1,6 @@
+[![GitHub Workflow - Build and Test Status](https://img.shields.io/github/actions/workflow/status/ghdl/setup-ghdl/.github%2Fworkflows%2FPipeline.yml?branch=dev&logo=githubactions)](https://GitHub.com/ghdl/setup-ghdl/actions/workflows/Pipeline.yml)
+[![Sourcecode License](https://img.shields.io/badge/code-MIT%20License-green?longCache=true&style=flat-square&logoColor=fff)](LICENSE.md)
+
 # Setup GHDL in GitHub Action Workflows
 
 This composite action, installs GHDL in a GitHub Action's workflow job.
