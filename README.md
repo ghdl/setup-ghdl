@@ -8,8 +8,7 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
 ## Features
 
 * Select GHDL version:
-  * tagged release like `5.0.0`
-  * `latest` (stable) release, or
+  * tagged release like `5.0.0`, or
   * `nightly` release (rolling release).
 * Select GHDL backend:
   * mcode
@@ -77,7 +76,7 @@ jobs:
 
 | Parameter           | Required | Default     | Description                                                                                                                                 |
 |---------------------|:--------:|-------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.0.0`, `latest` or `nightly`.                                                                          |
+| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.0.0` or `nightly`.                                                                                    |
 | `backend`           |    no    | `'mcode'`   | GHDL backend: `llvm`, `llvm-jit`, `mcode`, `gcc`.                                                                                           |
 | `runtime`           |    no    | `''`        | If runner OS is Windows, a MSYS2 runtime can be selected (`mingw64`, `ucrt64`). If not set, Windows native is used (not MSYS2 environment). |
 | `install-directory` |    no    | `'install'` | Local installation directory, in case an archive asset is downloaded and extracted.                                                         |
