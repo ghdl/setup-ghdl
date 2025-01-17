@@ -22,68 +22,115 @@ on:
 
 jobs:
   Setup-GHDL-Nightly:
-    name: ${{ matrix.icon }} Setup GHDL ${{ matrix.backend }} on ${{ matrix.name }}
-    runs-on: ${{ matrix.image }}
+    name: ${{ matrix.os.icon }} GHDL ${{ matrix.version.install }} ${{ matrix.os.backend }} on ${{ matrix.os.name }}
+    runs-on: ${{ matrix.os.image }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-20.04', runtime: '',        backend: 'mcode'}      # not supported
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'}      # not supported
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'mcode'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm-jit'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'}
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'}        # not supported
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'}
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'}
+          - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'}
+          - {icon: '🪟',   name: 'Windows', image: 'windows-2022', runtime: '',        backend: 'mcode'}
+          - {icon: '🪟⬛', name: 'Windows', image: 'windows-2022', runtime: 'mingw32', backend: 'mcode'}      # not supported
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
+        version:
+#          - {install: '5.0.0',   expected: '5.0.0'}
+#          - {install: 'latest',  expected: '5.0.0'}
+          - {install: 'nightly', expected: '5.0.0-dev'}
         include:
-          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-20.04', 'runtime': '',        'backend': 'mcode'}
-          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'xcode'}
-          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'mcode'}
-          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm'}
-          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'llvm-jit'}
-          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'backend': 'gcc'}
-          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'backend': 'gcc'}
-          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'backend': 'mcode'}
-          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'backend': 'llvm'}
-          - {'icon': '🍏',   'name': 'macOS',   'image': 'macos-14',     'runtime': '',        'backend': 'llvm'}
-          - {'icon': '🪟',   'name': 'Windows', 'image': 'windows-2022', 'runtime': '',        'backend': 'mcode'}
-          - {'icon': '🪟⬛', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw32', 'backend': 'mcode'}
-          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'mcode'}
-          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'llvm'}
-          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'backend': 'llvm-jit'}
-          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'mcode'}
-          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm'}
-          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'backend': 'llvm-jit'}
+          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}}
+          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'}}
+          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64', backend: 'mcode'}}
+          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64', backend: 'llvm'}}
+
     defaults:
       run:
         shell: bash
 
     steps:
-      - name: 🟦 Setup MSYS2 for ${{ matrix.runtime }}
+      - name: Detect correct shell
+        id: detect
+        run: |
+          # Detect correct shell
+          if [[ "${{ matrix.os.name }}" == "Windows" && "${{ matrix.os.runtime }}" != "" ]]; then
+            printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
+          else
+            printf "shell=bash" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🟦 Setup MSYS2 for ${{ matrix.os.runtime }}
         uses: msys2/setup-msys2@v2
-        if: matrix.runtime != ''
+        if: matrix.os.runtime != ''
         with:
-          msystem: ${{ matrix.runtime }}
+          msystem: ${{ matrix.os.runtime }}
           update: true
 
-      - name: Setup GHDL ${{ matrix.backend }}
+      - name: Setup GHDL ${{ matrix.os.backend }}
         uses: ghdl/setup-ghdl@v1
         with:
-          version: nightly
-          backend: ${{ matrix.backend }}
-          runtime: ${{ matrix.runtime }}
+          version: ${{ matrix.version.install }}
+          backend: ${{ matrix.os.backend }}
+          runtime: ${{ matrix.os.runtime }}
           investigate: true
 
-      - name: Verify on Linux or macOS
-        if: matrix.name == 'Ubuntu' || matrix.name == 'macOS'
+      - name: Verify on Linux, macOS and Windows (native)
+        if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS' || ( matrix.os.name == 'Windows' && matrix.os.runtime == '' )
         run: |
-          printf "%s\n" "${PATH}"
 
-          which ghdl
-          ghdl --version
+          ANSI_LIGHT_RED=$'\x1b[91m'
+          ANSI_LIGHT_GREEN=$'\x1b[92m'
+          ANSI_NOCOLOR=$'\x1b[0m'
 
-      - name: Verify on Windows (native)
-        if: matrix.name == 'Windows' && matrix.runtime == ''
+          printf "which ghdl: %s\n" "$(which ghdl)"
+
+          expected="${{ matrix.version.expected }}"
+          printf "%s" "Verify GHDL version '${expected}' ... "
+          if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s\${ANSI_NOCOLOR}n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "Test-SetupGHDL" "GHDL version doesn't match."
+
+            ghdl --version
+          fi
+
+      - name: Verify on Windows + MSYS2
+        if: matrix.os.name == 'Windows' && matrix.os.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          ANSI_LIGHT_RED=$'\x1b[91m'
+          ANSI_LIGHT_GREEN=$'\x1b[92m'
+          ANSI_NOCOLOR=$'\x1b[0m'
+
+          printf "which ghdl: %s\n" "$(which ghdl)"
+
+          expected="${{ matrix.version.expected }}"
+          printf "%s" "Verify GHDL version '${expected}' ... "
+          if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "Test-SetupGHDL" "GHDL version doesn't match."
+
+            ghdl --version
+          fi
+
+      - name: Verify on Windows (native) with Powershell
+        if: matrix.os.name == 'Windows' && matrix.os.runtime == ''
         shell: powershell
         run: |
           echo $(Get-Command ghdl).Source
-          ghdl --version
-
-      - name: Verify on Windows + MSYS2
-        if: matrix.name == 'Windows' && matrix.runtime != ''
-        shell: 'msys2 {0}'
-        run: |
-          which ghdl
           ghdl --version
