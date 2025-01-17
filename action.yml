@@ -152,9 +152,11 @@ runs:
         # A generic test for supported named versions or tagged versions.
         if [[ "${{ inputs.version }}" == "latest" ]]; then
           # TODO: could be read from nightly's inventory.json
-          VERSION_IN_URL="5.0.0"
-        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}|nightly$ ]]; then
+          VERSION_IN_URL="v5.0.0"
+        elif [[ "${{ inputs.version }}" =~ ^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}|nightly$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
+        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
+          VERSION_IN_URL="v${{ inputs.version }}"
         else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL version '${{ inputs.version }}'."
           exit 1
@@ -221,7 +223,7 @@ runs:
           fi
         fi
 
-        printf "%s" "Check if GHDL backend is supported for this runner OS version ... "
+        printf "%s" "Check if GHDL backend '${{ inputs.backend }}' is supported for this runner OS version ... "
         if jq -e ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\" | has(\"${{ inputs.backend }}\")" inventory.json > /dev/null; then
           printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
         else
