@@ -28,33 +28,37 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-20.04', runtime: '',        backend: 'mcode'}      # not supported
-          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'}      # not supported
-          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'mcode'}
-          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'mcode'   }
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'    }
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm-jit'}
-          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'}
-          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'}        # not supported
-          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'}
-          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'}
-          - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'}
-          - {icon: '🪟',   name: 'Windows', image: 'windows-2022', runtime: '',        backend: 'mcode'}
-          - {icon: '🪟⬛', name: 'Windows', image: 'windows-2022', runtime: 'mingw32', backend: 'mcode'}      # not supported
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'     }
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'   }
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'    }
+          - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'    }
+          - {icon: '🪟',   name: 'Windows', image: 'windows-2022', runtime: '',        backend: 'mcode'   }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'   }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'    }
           - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'   }
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'    }
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
         version:
 #          - {install: '5.0.0',   expected: '5.0.0'}
 #          - {install: 'latest',  expected: '5.0.0'}
           - {install: 'nightly', expected: '5.0.0-dev'}
+        option:
+          - {can-fail: false}
         include:
-          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}}
-          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'}}
-          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64', backend: 'mcode'}}
-          - {version: {install: '4.1.0', expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64', backend: 'llvm'}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}, option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'},  option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}, option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'},  option: {can-fail: false}}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-20.04', runtime: '',        backend: 'mcode'}, option: {can-fail: true }}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'}, option: {can-fail: true }}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'  }, option: {can-fail: true }}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🪟⬛', name: 'Windows', image: 'windows-2022', runtime: 'mingw32', backend: 'mcode'}, option: {can-fail: true }}
+
+    continue-on-error: ${{ matrix.option.can-fail }}
 
     defaults:
       run:
