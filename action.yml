@@ -153,9 +153,9 @@ runs:
         if [[ "${{ inputs.version }}" == "latest" ]]; then
           # TODO: could be read from nightly's inventory.json
           VERSION_IN_URL="v5.0.0"
-        elif [[ "${{ inputs.version }}" =~ ^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}|nightly$ ]]; then
+        elif [[ "${{ inputs.version }}" =~ ^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}(-rc[0-9]+)?|nightly$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
-        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$ ]]; then
+        elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}(-rc[0-9]+)?$ ]]; then
           VERSION_IN_URL="v${{ inputs.version }}"
         else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL version '${{ inputs.version }}'."
