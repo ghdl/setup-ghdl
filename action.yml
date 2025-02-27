@@ -89,7 +89,7 @@ runs:
         # Download and install GHDL
         ANSI_LIGHT_RED=$'\x1b[91m'
         ANSI_LIGHT_GREEN=$'\x1b[92m'
-        ANSI_LIGHT_BLUE="\e[94m"
+        ANSI_LIGHT_BLUE=$'\x1b[94m'
         ANSI_NOCOLOR=$'\x1b[0m'
 
         if [[ "${{ runner.os }}" == "Linux" ]]; then
