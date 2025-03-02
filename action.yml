@@ -79,7 +79,7 @@ runs:
       shell: bash
       run: |
         printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Download 'jq' and copy to Git Bash ..."
-        curl -L -o /usr/bin/jq.exe https://github.com/jqlang/jq/releases/latest/download/jq-win64.exe
+        curl -L --fail https://github.com/jqlang/jq/releases/latest/download/jq-win64.exe -o /usr/bin/jq.exe
         printf "::endgroup::\n"
 
     - name: Download and install GHDL
@@ -174,7 +174,7 @@ runs:
 
         DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/${VERSION_IN_URL}/inventory.json"
         printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading release inventory file from '${DOWNLOAD_URL}' ..."
-        curl -L "${DOWNLOAD_URL}" -o inventory.json
+        curl -L --fail "${DOWNLOAD_URL}" -o inventory.json
         retCode=$?
         printf "::endgroup::\n  Downloading release inventory "
         if [[ $retCode -eq 0 ]]; then
@@ -243,7 +243,7 @@ runs:
         downloadFile="$(jq -r ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\".\"${{ inputs.backend }}\".file" inventory.json)"
         downloadFile="${downloadFile#*/}"
         printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading asset from '${downloadBase}/${downloadFile}' ..."
-        curl -L "${downloadBase}/${downloadFile}" -o "${downloadFile}"
+        curl -L --fail "${downloadBase}/${downloadFile}" -o "${downloadFile}"
         retCode=$?
         printf "::endgroup::\n  Downloading GHDL installation archive "
         if [[ $retCode -eq 0 ]]; then
