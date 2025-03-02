@@ -11,7 +11,8 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
 ## Features
 
 * Select GHDL version:
-  * tagged release like `5.0.0`, or
+  * tagged release like `5.0.1`, or
+  * latest release, currently `5.0.1`, or
   * `nightly` release (rolling release).
 * Select GHDL backend:
   * mcode
