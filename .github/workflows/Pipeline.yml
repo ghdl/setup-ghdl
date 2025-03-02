@@ -43,9 +43,9 @@ jobs:
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'    }
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
         version:
-#          - {install: '5.0.0',   expected: '5.0.0'}
-#          - {install: 'latest',  expected: '5.0.0'}
-          - {install: 'nightly', expected: '5.0.0-dev'}
+          - {install: '5.0.1',   expected: '5.0.1'}
+          - {install: 'latest',  expected: '5.0.1'}
+          - {install: 'nightly', expected: '6.0.0-dev'}
         option:
           - {can-fail: false}
         include:
