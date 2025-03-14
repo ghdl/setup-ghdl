@@ -67,7 +67,7 @@ jobs:
           - {version: {install: 'latest',  expected: '5.0.1'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}, option: {can-fail: true }}
           - {version: {install: 'latest',  expected: '5.0.1'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: true }}
           - {version: {install: 'latest',  expected: '5.0.1'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}, option: {can-fail: true }}
-
+          # error message testing (outdated os version, wrong backend, unsupported runtime, ...)
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-20.04', runtime: '',        backend: 'mcode'},    option: {can-fail: true }}
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'},    option: {can-fail: true }}
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'  },    option: {can-fail: true }}
@@ -100,7 +100,7 @@ jobs:
           msystem: ${{ matrix.os.runtime }}
           update: true
 
-      - name: Setup GHDL ${{ matrix.os.backend }}
+      - name: Setup GHDL (${{ matrix.os.backend }}) ${{ matrix.version.install }} on ${{ matrix.os.runtime }}
         uses: ghdl/setup-ghdl@dev
         with:
           version: ${{ matrix.version.install }}
