@@ -80,15 +80,18 @@ jobs:
         shell: bash
 
     steps:
-      - name: Detect correct shell
-        id: detect
-        run: |
-          # Detect correct shell
-          if [[ "${{ matrix.os.name }}" == "Windows" && "${{ matrix.os.runtime }}" != "" ]]; then
-            printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
-          else
-            printf "shell=bash" >> $GITHUB_OUTPUT
-          fi
+#      - name: Detect correct shell
+#        id: detect
+#        run: |
+#          # Detect correct shell
+#          if [[ "${{ matrix.os.name }}" == "Windows" && "${{ matrix.os.runtime }}" != "" ]]; then
+#            printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
+#          else
+#            printf "shell=bash" >> $GITHUB_OUTPUT
+#          fi
+
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
 
       - name: 🟦 Setup MSYS2 for ${{ matrix.os.runtime }}
         uses: msys2/setup-msys2@v2
@@ -105,10 +108,9 @@ jobs:
           runtime: ${{ matrix.os.runtime }}
           investigate: true
 
-      - name: Verify on Linux, macOS and Windows (native)
+      - name: Verify GHDL version on Linux, macOS and Windows (native)
         if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS' || ( matrix.os.name == 'Windows' && matrix.os.runtime == '' )
         run: |
-
           ANSI_LIGHT_RED=$'\x1b[91m'
           ANSI_LIGHT_GREEN=$'\x1b[92m'
           ANSI_NOCOLOR=$'\x1b[0m'
@@ -126,7 +128,7 @@ jobs:
             ghdl --version
           fi
 
-      - name: Verify on Windows + MSYS2
+      - name: Verify GHDL version on Windows + MSYS2
         if: matrix.os.name == 'Windows' && matrix.os.runtime != ''
         shell: "msys2 {0}"
         run: |
@@ -147,9 +149,32 @@ jobs:
             ghdl --version
           fi
 
-      - name: Verify on Windows (native) with Powershell
+      - name: Verify GHDL version on Windows (native) with Powershell
         if: matrix.os.name == 'Windows' && matrix.os.runtime == ''
         shell: powershell
         run: |
           echo $(Get-Command ghdl).Source
           ghdl --version
+
+      - name: Check HelloWorld example on Linux, macOS and Windows (native)
+        if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS' || ( matrix.os.name == 'Windows' && matrix.os.runtime == '' )
+        run: |
+          ghdl -a --std=08 example/HelloWorld.vhdl
+          ghdl -e --std=08 HelloWorld
+          ghdl -r --std=08 HelloWorld
+
+      - name: Check HelloWorld example on Windows + MSYS2
+        if: matrix.os.name == 'Windows' && matrix.os.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          ghdl -a --std=08 example/HelloWorld.vhdl
+          ghdl -e --std=08 HelloWorld
+          ghdl -r --std=08 HelloWorld
+
+      - name: Check HelloWorld example on Windows (native) with Powershell
+        if: matrix.os.name == 'Windows' && matrix.os.runtime == ''
+        shell: powershell
+        run: |
+          ghdl -a --std=08 example/HelloWorld.vhdl
+          ghdl -e --std=08 HelloWorld
+          ghdl -r --std=08 HelloWorld
