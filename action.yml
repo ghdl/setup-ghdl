@@ -225,7 +225,15 @@ runs:
 
         printf "%s" "Check if GHDL backend '${{ inputs.backend }}' is supported for this runner OS version ... "
         if jq -e ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\" | has(\"${{ inputs.backend }}\")" inventory.json > /dev/null; then
-          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          if jq -e ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\".\"${{ inputs.backend }}\" | has(\"error\")" inventory.json > /dev/null; then
+            errorMessage="$(jq -r ".files.ghdl.\"${osName,,}\".\"${osMajorVersion}\".\"${osArchitecture}\".\"${osRuntime}\".\"${{ inputs.backend }}\".error" inventory.json)"
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[SUPPORT DROPPED]"
+            printf "${ANSI_LIGHT_RED}  %s${ANSI_NOCOLOR}\n" "${errorMessage}"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Support for GHDL backend '${{ inputs.backend }}' for ${osName} ${osMajorVersion} was dropped. Reason: ${errorMessage}"
+            exit 1
+          else
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          fi
         else
           printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported GHDL backend '${{ inputs.backend }}' for ${osName} ${osMajorVersion}."
