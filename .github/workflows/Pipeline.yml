@@ -106,7 +106,7 @@ jobs:
           update: true
 
       - name: Setup GHDL (${{ matrix.os.backend }}) ${{ matrix.version.install }} on ${{ matrix.os.runtime }}
-        uses: ghdl/setup-ghdl@dev
+        uses: ghdl/setup-ghdl@paebbels/get-latest-version-from-nightly
         with:
           version: ${{ matrix.version.install }}
           backend: ${{ matrix.os.backend }}

@@ -151,6 +151,20 @@ runs:
 
         # A generic test for supported named versions or tagged versions.
         if [[ "${{ inputs.version }}" == "latest" ]]; then
+          DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/nightly/inventory.json"
+          printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading nightly inventory file from '${DOWNLOAD_URL}' ..."
+          curl -L --fail "${DOWNLOAD_URL}" -o nightly.json
+          retCode=$?
+          printf "::endgroup::\n  Downloading nightly inventory "
+          if [[ $retCode -eq 0 ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s\${ANSI_NOCOLOR}n" "[FAILED]"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download 'inventory.json' as 'nightly.json'."
+            exit 1
+          fi
+
+
           # TODO: could be read from nightly's inventory.json
           VERSION_IN_URL="v5.1.1"
         elif [[ "${{ inputs.version }}" =~ ^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}(-rc[0-9]+)?|nightly$ ]]; then
