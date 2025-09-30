@@ -142,7 +142,7 @@ runs:
           fi
 
           osName="Windows"
-          osMajorVersion="2022"
+          osMajorVersion="2025"
           osArchitecture="x86-64"
         else
           printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported runner OS '${{ runner.os }}'."
