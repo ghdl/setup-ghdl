@@ -167,7 +167,7 @@ runs:
           fi
 
           printf "%s" "Check if 'latest release' is supported (JSON structure version 1.1) ... "
-          if jq -e ".version != \"1.1\"" nightly.json > /dev/null; then
+          if jq -e ".version | tonumber | . < 1.1" nightly.json > /dev/null; then
             printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[OUTDATED]"
             printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported feature 'install latest version' due to outdated 'inventory.json' format."
             exit 1
@@ -209,6 +209,15 @@ runs:
         else
           printf "${ANSI_LIGHT_RED}%s\${ANSI_NOCOLOR}n" "[FAILED]"
           printf "::error title=%s::%s\n" "setup-ghdl" "Failed to download 'inventory.json'."
+          exit 1
+        fi
+
+        printf "%s" "Check JSON structure version ... "
+        if jq -e ".version | tonumber | . >= 1.0 and . < 2.0" inventory.json > /dev/null; then
+          printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+        else
+          printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[MISMATCH]"
+          printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported version '$(jq ".version" inventory.json)' of 'inventory.json' format."
           exit 1
         fi
 
