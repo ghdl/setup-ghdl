@@ -42,13 +42,13 @@ jobs:
           - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'    }
 ###       - {icon: '🍏',   name: 'macOS',   image: 'macos-15',     runtime: '',        backend: 'mcode'   }  # mcode not supported on aarch64
           - {icon: '🍏',   name: 'macOS',   image: 'macos-15',     runtime: '',        backend: 'llvm'    }
-          - {icon: '🪟',   name: 'Windows', image: 'windows-2022', runtime: '',        backend: 'mcode'   }
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'   }
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'    }
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'   }
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'    }
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
+          - {icon: '🪟',   name: 'Windows', image: 'windows-2025', runtime: '',        backend: 'mcode'   }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'mcode'   }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'    }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm-jit'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'mcode'   }
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'    }
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}
         version:
           - {install: '5.0.1',   expected: '5.0.1'}
           - {install: '5.1.1',   expected: '5.1.1'}
@@ -63,20 +63,20 @@ jobs:
           - {os: {runtime: "ucrt64",  backend: "llvm-jit"}, version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
         include:
           # old version with retrofitted inventory.json
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'},    option: {can-fail: false}}
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: false}}
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'},    option: {can-fail: false}}
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'mcode'},    option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'mcode'},    option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: false}}
           # because of LLVM incompatibility
-          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: true }}
-          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}, option: {can-fail: true }}
-          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: true }}
-          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}, option: {can-fail: true }}
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: true }}
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm-jit'}, option: {can-fail: true }}
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: true }}
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}, option: {can-fail: true }}
           # error message testing (outdated os version, wrong backend, unsupported backend, unsupported runtime, ...)
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🐧',   name: 'Ubuntu',  image: 'ubuntu-22.04', runtime: '',        backend: 'mcode'},    option: {can-fail: true }}
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'},    option: {can-fail: true }}
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'  },    option: {can-fail: true }}
-          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🪟⬛', name: 'Windows', image: 'windows-2022', runtime: 'mingw32', backend: 'mcode'},    option: {can-fail: true }}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🪟⬛', name: 'Windows', image: 'windows-2025', runtime: 'mingw32', backend: 'mcode'},    option: {can-fail: true }}
 
     continue-on-error: ${{ matrix.option.can-fail }}
 
@@ -96,7 +96,7 @@ jobs:
 #          fi
 
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🟦 Setup MSYS2 for ${{ matrix.os.runtime }}
         uses: msys2/setup-msys2@v2
@@ -106,7 +106,7 @@ jobs:
           update: true
 
       - name: Setup GHDL (${{ matrix.os.backend }}) ${{ matrix.version.install }} on ${{ matrix.os.runtime }}
-        uses: ghdl/setup-ghdl@dev
+        uses: ghdl/setup-ghdl@paebbels/get-latest-version-from-nightly
         with:
           version: ${{ matrix.version.install }}
           backend: ${{ matrix.os.backend }}
