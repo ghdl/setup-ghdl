@@ -14,6 +14,7 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
   * tagged release like `5.0.1`, `5.1.1`, or
   * latest release, currently `5.1.1`, or
   * `nightly` release (rolling release).
+  * `latest` release (retrieved from latest *nightly release*'s `inventory.json`).
 * Select GHDL backend:
   * mcode
   * LLVM
@@ -24,7 +25,7 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
   * Ubuntu 24.04 (LTS),
   * macOS-13 (x86-64),
   * macOS-14 (aarch64)
-  * Windows Server 2022.
+  * Windows Server 2025.
 
 ## Usage
 
@@ -80,7 +81,7 @@ jobs:
 
 | Parameter           | Required | Default     | Description                                                                                                                                 |
 |---------------------|:--------:|-------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.1.1` or `nightly`.                                                                                    |
+| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.1.1`, `latest` or `nightly`.                                                                          |
 | `backend`           |    no    | `'mcode'`   | GHDL backend: `llvm`, `llvm-jit`, `mcode`, `gcc`.                                                                                           |
 | `runtime`           |    no    | `''`        | If runner OS is Windows, a MSYS2 runtime can be selected (`mingw64`, `ucrt64`). If not set, Windows native is used (not MSYS2 environment). |
 | `install-directory` |    no    | `'install'` | Local installation directory, in case an archive asset is downloaded and extracted.                                                         |
