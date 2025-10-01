@@ -150,7 +150,9 @@ runs:
         fi
 
         # A generic test for supported named versions or tagged versions.
-        if [[ "${{ inputs.version }}" == "latest" ]]; then
+        if [[ "${{ inputs.version }}" == "nightly" ]]; then
+          VERSION_IN_URL="nightly"
+        elif [[ "${{ inputs.version }}" == "latest" ]]; then
           DOWNLOAD_URL="https://github.com/ghdl/ghdl/releases/download/nightly/inventory.json"
           printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Downloading nightly inventory file from '${DOWNLOAD_URL}' ..."
           curl -L --fail "${DOWNLOAD_URL}" -o nightly.json
@@ -164,10 +166,21 @@ runs:
             exit 1
           fi
 
+          printf "%s" "Check if 'latest release' is supported (JSON structure version 1.1) ... "
+          if jq -e ".version != \"1.1\"" nightly.json > /dev/null; then
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[OUTDATED]"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported feature 'install latest version' due to outdated 'inventory.json' format."
+            exit 1
+          elif jq -e ".meta | has(\"latest\")" nightly.json > /dev/null; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[UNSUPPORTED]"
+            printf "::error title=%s::%s\n" "setup-ghdl" "Unsupported feature 'install latest version' due to missing information in 'inventory.json' downloaded from latest 'nightly' release."
+            exit 1
+          fi
 
-          # TODO: could be read from nightly's inventory.json
-          VERSION_IN_URL="v5.1.1"
-        elif [[ "${{ inputs.version }}" =~ ^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}(-rc[0-9]+)?|nightly$ ]]; then
+          VERSION_IN_URL="$(jq -r '.meta.latest.version' nightly.json)"
+        elif [[ "${{ inputs.version }}" =~ ^v[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}(-rc[0-9]+)?$ ]]; then
           VERSION_IN_URL="${{ inputs.version }}"
         elif [[ "${{ inputs.version }}" =~ ^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}(-rc[0-9]+)?$ ]]; then
           VERSION_IN_URL="v${{ inputs.version }}"
