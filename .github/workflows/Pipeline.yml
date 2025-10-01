@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright © 2024 The GHDL Developers
+# Copyright © 2025 The GHDL Developers
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
@@ -28,35 +28,55 @@ jobs:
       fail-fast: false
       matrix:
         os:
+###       - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-22.04', runtime: '',        backend: 'mcode'   }  # GHDL doesn't provide assets for Ubuntu-22.04
+###       - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-22.04', runtime: '',        backend: 'llvm'    }  # GHDL doesn't provide assets for Ubuntu-22.04
+###       - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-22.04', runtime: '',        backend: 'llvm-jit'}  # GHDL doesn't provide assets for Ubuntu-22.04
+###       - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-22.04', runtime: '',        backend: 'gcc'     }  # GHDL doesn't provide assets for Ubuntu-22.04
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'mcode'   }
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'    }
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm-jit'}
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'     }
           - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'   }
           - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'    }
+###       - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'mcode'   }  # mcode not supported on aarch64
           - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'    }
-          - {icon: '🪟',   name: 'Windows', image: 'windows-2022', runtime: '',        backend: 'mcode'   }
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'   }
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'    }
-          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'   }
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'    }
-          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
+###       - {icon: '🍏',   name: 'macOS',   image: 'macos-15',     runtime: '',        backend: 'mcode'   }  # mcode not supported on aarch64
+          - {icon: '🍏',   name: 'macOS',   image: 'macos-15',     runtime: '',        backend: 'llvm'    }
+          - {icon: '🪟',   name: 'Windows', image: 'windows-2025', runtime: '',        backend: 'mcode'   }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'mcode'   }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'    }
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm-jit'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'mcode'   }
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'    }
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}
         version:
           - {install: '5.0.1',   expected: '5.0.1'}
-          - {install: 'latest',  expected: '5.0.1'}
+          - {install: '5.1.1',   expected: '5.1.1'}
+          - {install: 'latest',  expected: '5.1.1'}
           - {install: 'nightly', expected: '6.0.0-dev'}
         option:
           - {can-fail: false}
+        exclude:
+          - {os: {runtime: "mingw64", backend: "llvm"},     version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
+          - {os: {runtime: "mingw64", backend: "llvm-jit"}, version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
+          - {os: {runtime: "ucrt64",  backend: "llvm"},     version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
+          - {os: {runtime: "ucrt64",  backend: "llvm-jit"}, version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
         include:
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}, option: {can-fail: false}}
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'},  option: {can-fail: false}}
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}, option: {can-fail: false}}
-          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'},  option: {can-fail: false}}
-          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-20.04', runtime: '',        backend: 'mcode'}, option: {can-fail: true }}
-          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'}, option: {can-fail: true }}
-          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'  }, option: {can-fail: true }}
-          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '🪟⬛', name: 'Windows', image: 'windows-2022', runtime: 'mingw32', backend: 'mcode'}, option: {can-fail: true }}
+          # old version with retrofitted inventory.json
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'mcode'},    option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'mcode'},    option: {can-fail: false}}
+          - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: false}}
+          # because of LLVM incompatibility
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: true }}
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm-jit'}, option: {can-fail: true }}
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: true }}
+          - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}, option: {can-fail: true }}
+          # error message testing (outdated os version, wrong backend, unsupported backend, unsupported runtime, ...)
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🐧',   name: 'Ubuntu',  image: 'ubuntu-22.04', runtime: '',        backend: 'mcode'},    option: {can-fail: true }}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'},    option: {can-fail: true }}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'  },    option: {can-fail: true }}
+          - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🪟⬛', name: 'Windows', image: 'windows-2025', runtime: 'mingw32', backend: 'mcode'},    option: {can-fail: true }}
 
     continue-on-error: ${{ matrix.option.can-fail }}
 
@@ -65,15 +85,18 @@ jobs:
         shell: bash
 
     steps:
-      - name: Detect correct shell
-        id: detect
-        run: |
-          # Detect correct shell
-          if [[ "${{ matrix.os.name }}" == "Windows" && "${{ matrix.os.runtime }}" != "" ]]; then
-            printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
-          else
-            printf "shell=bash" >> $GITHUB_OUTPUT
-          fi
+#      - name: Detect correct shell
+#        id: detect
+#        run: |
+#          # Detect correct shell
+#          if [[ "${{ matrix.os.name }}" == "Windows" && "${{ matrix.os.runtime }}" != "" ]]; then
+#            printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
+#          else
+#            printf "shell=bash" >> $GITHUB_OUTPUT
+#          fi
+
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v5
 
       - name: 🟦 Setup MSYS2 for ${{ matrix.os.runtime }}
         uses: msys2/setup-msys2@v2
@@ -82,7 +105,7 @@ jobs:
           msystem: ${{ matrix.os.runtime }}
           update: true
 
-      - name: Setup GHDL ${{ matrix.os.backend }}
+      - name: Setup GHDL (${{ matrix.os.backend }}) ${{ matrix.version.install }} on ${{ matrix.os.runtime }}
         uses: ghdl/setup-ghdl@main
         with:
           version: ${{ matrix.version.install }}
@@ -90,10 +113,9 @@ jobs:
           runtime: ${{ matrix.os.runtime }}
           investigate: true
 
-      - name: Verify on Linux, macOS and Windows (native)
+      - name: Verify GHDL version on Linux, macOS and Windows (native)
         if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS' || ( matrix.os.name == 'Windows' && matrix.os.runtime == '' )
         run: |
-
           ANSI_LIGHT_RED=$'\x1b[91m'
           ANSI_LIGHT_GREEN=$'\x1b[92m'
           ANSI_NOCOLOR=$'\x1b[0m'
@@ -111,7 +133,7 @@ jobs:
             ghdl --version
           fi
 
-      - name: Verify on Windows + MSYS2
+      - name: Verify GHDL version on Windows + MSYS2
         if: matrix.os.name == 'Windows' && matrix.os.runtime != ''
         shell: "msys2 {0}"
         run: |
@@ -132,9 +154,32 @@ jobs:
             ghdl --version
           fi
 
-      - name: Verify on Windows (native) with Powershell
+      - name: Verify GHDL version on Windows (native) with Powershell
         if: matrix.os.name == 'Windows' && matrix.os.runtime == ''
         shell: powershell
         run: |
           echo $(Get-Command ghdl).Source
           ghdl --version
+
+      - name: Check HelloWorld example on Linux, macOS and Windows (native)
+        if: matrix.os.name == 'Ubuntu' || matrix.os.name == 'macOS' || ( matrix.os.name == 'Windows' && matrix.os.runtime == '' )
+        run: |
+          ghdl -a --std=08 example/HelloWorld.vhdl
+          ghdl -e --std=08 HelloWorld
+          ghdl -r --std=08 HelloWorld
+
+      - name: Check HelloWorld example on Windows + MSYS2
+        if: matrix.os.name == 'Windows' && matrix.os.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          ghdl -a --std=08 example/HelloWorld.vhdl
+          ghdl -e --std=08 HelloWorld
+          ghdl -r --std=08 HelloWorld
+
+      - name: Check HelloWorld example on Windows (native) with Powershell
+        if: matrix.os.name == 'Windows' && matrix.os.runtime == ''
+        shell: powershell
+        run: |
+          ghdl -a --std=08 example/HelloWorld.vhdl
+          ghdl -e --std=08 HelloWorld
+          ghdl -r --std=08 HelloWorld
