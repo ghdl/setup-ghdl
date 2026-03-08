@@ -78,6 +78,10 @@ runs:
       if: runner.os == 'Windows' && inputs.runtime == ''
       shell: bash
       run: |
+        # Download and install jq
+        ANSI_LIGHT_BLUE=$'\x1b[94m'
+        ANSI_NOCOLOR=$'\x1b[0m'
+
         printf "::group::${ANSI_LIGHT_BLUE}%s${ANSI_NOCOLOR}\n" "Download 'jq' and copy to Git Bash ..."
         curl -L --fail https://github.com/jqlang/jq/releases/latest/download/jq-win64.exe -o /usr/bin/jq.exe
         printf "::endgroup::\n"

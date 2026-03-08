@@ -11,8 +11,8 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
 ## Features
 
 * Select GHDL version:
-  * tagged release like `5.0.1`, `5.1.1`, or
-  * latest release, currently `5.1.1`, or
+  * tagged release like `5.0.1`, `5.1.1`, `6.0.0`, or
+  * latest release, currently `6.0.0`, or
   * `nightly` release (rolling release).
   * `latest` release (retrieved from latest *nightly release*'s `inventory.json`).
 * Select GHDL backend:
@@ -23,8 +23,8 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
 * Activate an investigation mode (check and show GHDL installation, ...).
 * Supported runner OS' provided by GitHub (automatically detected):
   * Ubuntu 24.04 (LTS),
-  * macOS-13 (x86-64),
-  * macOS-14 (aarch64)
+  * macOS-14 (aarch64),
+  * macOS-15 (aarch64),
   * Windows Server 2025.
 
 ## Usage
@@ -42,7 +42,7 @@ jobs:
           investigate: true
           
   GHDL-on-macOS:
-    runs-on: macOS-14
+    runs-on: macOS-15
     steps:
       - name: Run VHDL Simulation
         uses: ghdl/setup-ghdl@v1
@@ -51,7 +51,7 @@ jobs:
           backend: llvm
 
   GHDL-on-Windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
       - name: Run VHDL Simulation
         uses: ghdl/setup-ghdl@v1
@@ -60,7 +60,7 @@ jobs:
           backend: mcode
 
   GHDL-on-Windows-with-UCRT64:
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
       - name: 🟦 Setup MSYS2 for UCRT64
         uses: msys2/setup-msys2@v2
@@ -81,7 +81,7 @@ jobs:
 
 | Parameter           | Required | Default     | Description                                                                                                                                 |
 |---------------------|:--------:|-------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `version`           |    no    | `'nightly'` | A tagged GHDL version starting at `v5.1.1`, `latest` or `nightly`.                                                                          |
+| `version`           |    no    | `'nightly'` | A tagged GHDL version (starting at `v5.1.1`), `latest` or `nightly`.                                                                        |
 | `backend`           |    no    | `'mcode'`   | GHDL backend: `llvm`, `llvm-jit`, `mcode`, `gcc`.                                                                                           |
 | `runtime`           |    no    | `''`        | If runner OS is Windows, a MSYS2 runtime can be selected (`mingw64`, `ucrt64`). If not set, Windows native is used (not MSYS2 environment). |
 | `install-directory` |    no    | `'install'` | Local installation directory, in case an archive asset is downloaded and extracted.                                                         |
