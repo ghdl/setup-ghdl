@@ -23,6 +23,7 @@ This composite action, installs GHDL in a GitHub Action's workflow job.
 * Activate an investigation mode (check and show GHDL installation, ...).
 * Supported runner OS' provided by GitHub (automatically detected):
   * Ubuntu 24.04 (LTS),
+  * Ubuntu 26.04 (LTS),
   * macOS-14 (aarch64),
   * macOS-15 (aarch64),
   * Windows Server 2025.
