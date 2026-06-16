@@ -36,6 +36,10 @@ jobs:
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'    }
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm-jit'}
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'     }
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-26.04', runtime: '',        backend: 'mcode'   }
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-26.04', runtime: '',        backend: 'llvm'    }
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-26.04', runtime: '',        backend: 'llvm-jit'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-26.04', runtime: '',        backend: 'gcc'     }
 ###       - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'   }  # discontinued platform and version by GitHub
 ###       - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'    }  # discontinued platform and version by GitHub
 ###       - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'mcode'   }  # mcode not supported on aarch64
@@ -58,12 +62,22 @@ jobs:
         option:
           - {can-fail: false}
         exclude:
+          - {os: {image: 'ubuntu-26.04'}, version: {install: '5.0.1'}}                     # v5.0.1 was released before Ubuntu 26.04 was available
+          - {os: {image: 'ubuntu-26.04'}, version: {install: '5.1.1'}}                     # v5.1.1 was released before Ubuntu 26.04 was available
+          - {os: {image: 'ubuntu-26.04'}, version: {install: '6.0.0'}}                     # v6.0.0 was released before Ubuntu 26.04 was available
+          - {os: {image: 'ubuntu-26.04'}, version: {install: 'latest'}}                    # same as v6.0.0, could be fixed by a 6.1.0 release
           - {os: {runtime: "mingw64", backend: "llvm"},     version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
           - {os: {runtime: "mingw64", backend: "llvm-jit"}, version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
           - {os: {runtime: "ucrt64",  backend: "llvm"},     version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
           - {os: {runtime: "ucrt64",  backend: "llvm-jit"}, version: {expected: "5.0.1"}}  # excluded due to LLVM incompatibility (v5.0.1 used LLVM-19, MSYS2 uses LLVM-20+) -> purged from release
-          - {os: {runtime: "mingw64", backend: "llvm-jit"}, version: {expected: "5.1.1"}}  # LLVM-JIT version causes a non-zero exit
-          - {os: {runtime: "ucrt64",  backend: "llvm-jit"}, version: {expected: "5.1.1"}}  # LLVM-JIT version causes a non-zero exit
+          - {os: {runtime: "mingw64", backend: "llvm"},     version: {expected: "5.1.1"}}  # excluded due to LLVM incompatibility (v5.1.1 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
+          - {os: {runtime: "mingw64", backend: "llvm-jit"}, version: {expected: "5.1.1"}}  # excluded due to LLVM incompatibility (v5.1.1 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
+          - {os: {runtime: "ucrt64",  backend: "llvm"},     version: {expected: "5.1.1"}}  # excluded due to LLVM incompatibility (v5.1.1 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
+          - {os: {runtime: "ucrt64",  backend: "llvm-jit"}, version: {expected: "5.1.1"}}  # excluded due to LLVM incompatibility (v5.1.1 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
+          - {os: {runtime: "mingw64", backend: "llvm"},     version: {expected: "6.0.0"}}  # excluded due to LLVM incompatibility (v6.0.0 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
+          - {os: {runtime: "mingw64", backend: "llvm-jit"}, version: {expected: "6.0.0"}}  # excluded due to LLVM incompatibility (v6.0.0 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
+          - {os: {runtime: "ucrt64",  backend: "llvm"},     version: {expected: "6.0.0"}}  # excluded due to LLVM incompatibility (v6.0.0 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
+          - {os: {runtime: "ucrt64",  backend: "llvm-jit"}, version: {expected: "6.0.0"}}  # excluded due to LLVM incompatibility (v6.0.0 used LLVM-21, MSYS2 uses LLVM-22+) -> purged from release
         include:
           # old version with retrofitted inventory.json
           - {version: {install: '4.1.0',   expected: '4.1.0'}, os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'mcode'},    option: {can-fail: false}}
@@ -75,8 +89,14 @@ jobs:
           - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm-jit'}, option: {can-fail: true }}
           - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: true }}
           - {version: {install: '5.0.1',   expected: '5.0.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}, option: {can-fail: true }}
+          - {version: {install: '5.1.1',   expected: '5.1.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: true }}
           - {version: {install: '5.1.1',   expected: '5.1.1'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm-jit'}, option: {can-fail: true }}
+          - {version: {install: '5.1.1',   expected: '5.1.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: true }}
           - {version: {install: '5.1.1',   expected: '5.1.1'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}, option: {can-fail: true }}
+          - {version: {install: '6.0.0',   expected: '6.0.0'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm'},     option: {can-fail: true }}
+          - {version: {install: '6.0.0',   expected: '6.0.0'}, os: {icon: '❌🪟🟦', name: 'Windows', image: 'windows-2025', runtime: 'mingw64', backend: 'llvm-jit'}, option: {can-fail: true }}
+          - {version: {install: '6.0.0',   expected: '6.0.0'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'},     option: {can-fail: true }}
+          - {version: {install: '6.0.0',   expected: '6.0.0'}, os: {icon: '❌🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}, option: {can-fail: true }}
           # error message testing (outdated os version, wrong backend, unsupported backend, unsupported runtime, ...)
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🐧',   name: 'Ubuntu',  image: 'ubuntu-22.04', runtime: '',        backend: 'mcode'},    option: {can-fail: true }}
           - {version: {install: 'nightly', expected: '5.0.0'}, os: {icon: '❌🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'},    option: {can-fail: true }}
